@@ -4,6 +4,7 @@ library(RSQLServer)
 library(RODBC)
 library(formattable)
 
+# Create connection 
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 SOT_Master <- sqlQuery(my_connect, 
