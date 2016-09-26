@@ -71,6 +71,6 @@ OTS_percent <- function(OTUnits, TotalUnits){
 On_Time_Stock_table <- OTS_Master %>% 
   filter(OTS_Master$Week <= 30) %>%
   summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
-            Total_Units_sum=sum(OTS_Master$Units) ) 
+            Total_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"]) ) 
 
 OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
