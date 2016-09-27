@@ -17,6 +17,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# Excel Files
+# Office Files
 *.xls
 *.xlsx
+*.accdb
