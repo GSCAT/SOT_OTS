@@ -21,3 +21,4 @@ $RECYCLE.BIN/
 *.xls
 *.xlsx
 *.accdb
+.Rproj.user
