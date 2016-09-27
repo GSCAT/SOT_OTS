@@ -73,6 +73,21 @@ OTS_percent <- function(OTUnits, TotalUnits){
 On_Time_Stock_table <- OTS_Master %>% 
   filter(OTS_Master$Week <= 30) %>%
   summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
-            Total_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"]) ) 
+            Total_Units_sum=sum(OTS_Master$Units),
+            Measurable_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"])) 
 
+OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
 OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
+
+On_Time_Stock_table <- OTS_Master %>% 
+  #filter(OTS_Master$Week <= 30) %>%
+  group_by(Parent_Vendor, Month_Number,Week) %>%
+  summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]), 
+            Total_Units_sum=sum(Units),
+            Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) 
+
+# Experimental section
+OTS_Percent_value <- mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
+
+cbind(On_Time_Stock_table, OTS_Percent_value)
+head(On_Time_Stock_table)
