@@ -7,6 +7,7 @@ library(formattable)
 # Create connection 
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+path <- file.path( '~', 'SOT Weekly', '2016', 'Weekly', 'SOT_Master.R')
 
 # Create SOT Master
 SOT_Master <- sqlQuery(my_connect, 
@@ -14,6 +15,21 @@ SOT_Master <- sqlQuery(my_connect,
 
 OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
+
+write_csv(SOT_Master, path = paste(dirname(path),  'SOT_Master_Raw.csv', sep = '/' ))
+write_csv(OTS_Master, path = paste(dirname(path),  'OTS_Master_Raw.csv', sep = '/' ))
+
+OTS_Master <- OTS_Master %>% 
+  filter(OTS_Master$Week <= 34,
+        !is.na(OTS_Master$DC_NAME),
+        !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
+        !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
+        !grepl("JPF", DC_NAME, ignore.case = TRUE)) 
+
+SOT_Master <- SOT_Master %>% 
+  filter(SOT_Master$ShipCancelWeek <= 34,
+         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
+         !grepl("dummy", Parent_Vendor, ignore.case = TRUE)) 
 
 # Output tables
 
@@ -25,7 +41,7 @@ OTS_by_Category <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late>5]))%>%
+            DaysLate5 = sum(Units[Days_Late>5], na.rm = TRUE))%>%
   droplevels()
 
 # 2) OTS by Vendor Summary
@@ -36,7 +52,7 @@ OTS_by_Vendor <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late>5]))%>%
+            DaysLate5 = sum(Units[Days_Late>5], na.rm = TRUE))%>%
   droplevels()
 
 
@@ -48,7 +64,7 @@ SOT_by_Category <- SOT_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * DAYS_LATE[Lateness=="Late"]),
-            DaysLate5 = sum(Units[DAYS_LATE>5]))%>%
+            DaysLate5 = sum(Units[DAYS_LATE>5], na.rm = TRUE))%>%
   droplevels()
 
 # 4) OTS by Vendor Summary
@@ -59,8 +75,17 @@ SOT_by_Vendor <- SOT_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * DAYS_LATE[Lateness=="Late"]),
-            DaysLate5 = sum(Units[DAYS_LATE>5]))%>%
+            DaysLate5 = sum(Units[DAYS_LATE>5], na.rm = TRUE))%>%
   droplevels()
+
+
+# Output 
+write_csv(OTS_by_Category[, c(1:4, 6:10, 5)], path = paste(dirname(path),  'OTS_by_Category.csv', sep = '/' ))
+write_csv(OTS_by_Vendor, path = paste(dirname(path),  'OTS_by_Vendor.csv', sep = '/' ))
+
+write_csv(SOT_by_Category, path = paste(dirname(path),  'SOT_by_Category.csv', sep = '/' ))
+write_csv(SOT_by_Vendor, path = paste(dirname(path),  'SOT_by_Vendor.csv', sep = '/' ))
+
 
 # functions for Calculating SOT/OTS
 
@@ -90,6 +115,9 @@ OTS_Percent_value <- mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, O
 On_Time_Stock_table <- as.data.frame(On_Time_Stock_table)
 On_Time_Stock_table <- On_Time_Stock_table %>% mutate("OTS_Percent_value"= OTS_Percent_value)
 
+
+
+
 # Experimental section
 On_Time_Stock_table <- OTS_Master %>% 
   #filter(OTS_Master$Week <= 30) %>%
@@ -102,3 +130,8 @@ On_Time_Stock_table <- OTS_Master %>%
 
 cbind(On_Time_Stock_table, OTS_Percent_value)
 head(On_Time_Stock_table)
+
+View(OTS_by_Category)
+View(OTS_by_Vendor)
+View(SOT_by_Category)
+View(SOT_by_Vendor)
