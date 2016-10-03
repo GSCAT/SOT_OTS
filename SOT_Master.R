@@ -7,7 +7,16 @@ library(formattable)
 # Create connection 
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+
 path <- file.path( '~', 'SOT Weekly', '2016', 'Weekly', 'SOT_Master.R')
+
+prompt_for_week <- function()
+{ 
+  n <- readline(prompt="Enter Week number: ")
+  return(as.integer(n))
+}
+
+EOW <- prompt_for_week()
 
 # Create SOT Master
 SOT_Master <- sqlQuery(my_connect, 
@@ -20,14 +29,14 @@ write_csv(SOT_Master, path = paste(dirname(path),  'SOT_Master_Raw.csv', sep = '
 write_csv(OTS_Master, path = paste(dirname(path),  'OTS_Master_Raw.csv', sep = '/' ))
 
 OTS_Master <- OTS_Master %>% 
-  filter(OTS_Master$Week <= 34,
+  filter(OTS_Master$Week <= EOW,
         !is.na(OTS_Master$DC_NAME),
         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
         !grepl("JPF", DC_NAME, ignore.case = TRUE)) 
 
 SOT_Master <- SOT_Master %>% 
-  filter(SOT_Master$ShipCancelWeek <= 34,
+  filter(SOT_Master$ShipCancelWeek <= EOW,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE)) 
 
@@ -135,3 +144,7 @@ View(OTS_by_Category)
 View(OTS_by_Vendor)
 View(SOT_by_Category)
 View(SOT_by_Vendor)
+
+
+
+
