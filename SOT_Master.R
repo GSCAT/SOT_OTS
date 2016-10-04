@@ -16,6 +16,14 @@ prompt_for_week <- function()
   return(as.integer(n))
 }
 
+choose_file_directory <- function()
+{
+  v <- jchoose.dir()
+  return(v)
+}
+
+SOT_OTS_directory <- choose_file_directory()
+
 EOW <- prompt_for_week()
 
 # Create SOT Master
@@ -25,8 +33,8 @@ SOT_Master <- sqlQuery(my_connect,
 OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
 
-write_csv(SOT_Master, path = paste(dirname(path),  'SOT_Master_Raw.csv', sep = '/' ))
-write_csv(OTS_Master, path = paste(dirname(path),  'OTS_Master_Raw.csv', sep = '/' ))
+write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep = '/' ))
 
 OTS_Master <- OTS_Master %>% 
   filter(OTS_Master$Week <= EOW,
@@ -89,12 +97,17 @@ SOT_by_Vendor <- SOT_Master %>%
 
 
 # Output 
-write_csv(OTS_by_Category[, c(1:4, 6:10, 5)], path = paste(dirname(path),  'OTS_by_Category.csv', sep = '/' ))
-write_csv(OTS_by_Vendor, path = paste(dirname(path),  'OTS_by_Vendor.csv', sep = '/' ))
+write_csv(OTS_by_Category[, c(1:4, 6:10, 5)], path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = '/' ))
+write_csv(OTS_by_Vendor, path = paste(SOT_OTS_directory,  'OTS_by_Vendor.csv', sep = '/' ))
 
-write_csv(SOT_by_Category, path = paste(dirname(path),  'SOT_by_Category.csv', sep = '/' ))
-write_csv(SOT_by_Vendor, path = paste(dirname(path),  'SOT_by_Vendor.csv', sep = '/' ))
+write_csv(SOT_by_Category, path = paste(SOT_OTS_directory,  'SOT_by_Category.csv', sep = '/' ))
+write_csv(SOT_by_Vendor, path = paste(SOT_OTS_directory,  'SOT_by_Vendor.csv', sep = '/' ))
 
+write_csv(SOT_Master, path = paste(SOT_OTS_directory,  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
+
+write_csv(SOT_Master, path = paste(SOT_OTS_directory ,  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
 # functions for Calculating SOT/OTS
 
