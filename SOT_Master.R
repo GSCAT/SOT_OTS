@@ -26,6 +26,8 @@ SOT_OTS_directory <- choose_file_directory()
 
 EOW <- prompt_for_week()
 
+date_range <- c(-6,-3,0,3,6)
+
 # Create SOT Master
 SOT_Master <- sqlQuery(my_connect, 
                      query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;")
@@ -58,7 +60,7 @@ OTS_by_Category <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late>5], na.rm = TRUE))%>%
+            DaysLate5 = sum(Units[Days_Late>5], na.rm = TRUE))%>% 
   droplevels()
 
 # 2) OTS by Vendor Summary
@@ -117,11 +119,12 @@ OTS_percent <- function(OTUnits, TotalUnits){
 }
 
 # Tables for Visuals
-On_Time_Stock_table <- OTS_Master %>% 
-  filter(OTS_Master$Week <= 30) %>%
-  summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
-            Total_Units_sum=sum(OTS_Master$Units),
-            Measurable_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"])) 
+
+# On_Time_Stock_table <- OTS_Master %>% 
+#   filter(OTS_Master$Week <= 30) %>%
+#   summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
+#             Total_Units_sum=sum(OTS_Master$Units),
+#             Measurable_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"])) 
 
 OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
 OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
@@ -147,7 +150,11 @@ On_Time_Stock_table <- OTS_Master %>%
   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]),
             Late_Units_sum =sum(Units[Lateness=="Late"]),
             Total_Units_sum=sum(Units),
-            Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) # %>% 
+            Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) %>% 
+  mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
+            mutate("OTS_Percent_value"= as.data.frame(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)))
+
+# %>% 
  # mutate_each(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum) )
 
 cbind(On_Time_Stock_table, OTS_Percent_value)
