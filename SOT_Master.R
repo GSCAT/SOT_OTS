@@ -3,10 +3,28 @@ library(readr)
 library(RSQLServer)
 library(RODBC)
 library(formattable)
+library(RJDBC)
+library(rChoiceDialogs)
 
-# Create connection 
+
+################
+# Create RODBC connection 
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+DBC_INFO <- sqlQuery(my_connect, 
+                     query = "SELECT  * from dbc.dbcinfo;")
+#################
+
+#################
+# Create RJDBC connection - In Dev
+#Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
+# drv2 <- JDBC("com.teradata.jdbc.TeraConnectionPoolDataSource", "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\terajdbc4.jar;C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\tdgssconfig.jar")
+# conn <- dbConnect(drv2, "jdbc:teradata://tdprodcop1.gap.com", my_uid, my_pwd)
+# SOT_Master_RJDBC <- dbGetQuery(conn, 
+#                       query = "SELECT  * from dbc.dbcinfo;")
+#################
+
+
 
 path <- file.path( '~', 'SOT Weekly', '2016', 'Weekly', 'SOT_Master.R')
 
@@ -130,7 +148,7 @@ OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable
 OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
 
 On_Time_Stock_table <- OTS_Master %>% 
-  #filter(OTS_Master$Week <= 30) %>%
+  filter(OTS_Master$Week <= 35) %>%
   group_by(Parent_Vendor, Month_Number,Week) %>%
   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]), 
             Total_Units_sum=sum(Units),
