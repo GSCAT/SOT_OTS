@@ -53,6 +53,8 @@ SOT_Master <- sqlQuery(my_connect,
 OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
 
+close(my_connect)
+
 write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep = '/' ))
 
@@ -70,6 +72,8 @@ SOT_Master <- SOT_Master %>%
 
 # Output tables
 
+# Fix DaysLate5 to not include Units >45 days late
+
 # 1) OTS by Category Summary
 OTS_by_Category <- OTS_Master %>%
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
@@ -78,7 +82,7 @@ OTS_by_Category <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late>5], na.rm = TRUE))%>% 
+            DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]))%>% 
   droplevels()
 
 # 2) OTS by Vendor Summary
@@ -89,7 +93,7 @@ OTS_by_Vendor <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late>5], na.rm = TRUE))%>%
+            DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]))%>% 
   droplevels()
 
 
@@ -124,9 +128,6 @@ write_csv(SOT_by_Category, path = paste(SOT_OTS_directory,  'SOT_by_Category.csv
 write_csv(SOT_by_Vendor, path = paste(SOT_OTS_directory,  'SOT_by_Vendor.csv', sep = '/' ))
 
 write_csv(SOT_Master, path = paste(SOT_OTS_directory,  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
-
-write_csv(SOT_Master, path = paste(SOT_OTS_directory ,  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
 # functions for Calculating SOT/OTS
