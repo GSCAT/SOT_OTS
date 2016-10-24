@@ -44,7 +44,7 @@ SOT_OTS_directory <- choose_file_directory()
 
 EOW <- prompt_for_week()
 
-date_range <- c(-6,-3,0,3,6)
+# date_range <- c(-6,-3,0,3,6)
 
 # Create SOT Master
 SOT_Master <- sqlQuery(my_connect, 
@@ -72,8 +72,6 @@ SOT_Master <- SOT_Master %>%
 
 # Output tables
 
-# Fix DaysLate5 to not include Units >45 days late
-
 # 1) OTS by Category Summary
 OTS_by_Category <- OTS_Master %>%
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
@@ -82,7 +80,12 @@ OTS_by_Category <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]))%>% 
+            DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]),
+            UnitsArriveLessThanNeg5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= -5)]),
+            UnitsArriveLessThanNeg3 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= -3)]),
+            UnitsArriveLessThan0 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= 0)]),
+            UnitsArriveLessThan3 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= 3)]),
+            UnitsArriveLessThan5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= 5)])) %>% 
   droplevels()
 
 # 2) OTS by Vendor Summary
@@ -93,7 +96,12 @@ OTS_by_Vendor <- OTS_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
-            DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]))%>% 
+            DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]),
+            UnitsArriveLessThanNeg5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= -5)]),
+            UnitsArriveLessThanNeg3 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= -3)]),
+            UnitsArriveLessThan0 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= 0)]),
+            UnitsArriveLessThan3 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= 3)]),
+            UnitsArriveLessThan5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & (Days_Late <= 5)])) %>%
   droplevels()
 
 
@@ -105,7 +113,12 @@ SOT_by_Category <- SOT_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * DAYS_LATE[Lateness=="Late"]),
-            DaysLate5 = sum(Units[DAYS_LATE>5], na.rm = TRUE))%>%
+            DaysLate5 = sum(Units[DAYS_LATE>5], na.rm = TRUE),
+            UnitsArriveLessThanNeg5 = sum(Units[Lateness=="OnTime" & DAYS_LATE < -5]),
+            UnitsArriveLessThanNeg3 = sum(Units[Lateness=="OnTime" & DAYS_LATE < -3]),
+            UnitsArriveLessThan0 = sum(Units[Lateness=="OnTime" & DAYS_LATE < 0]),
+            UnitsArriveLessThan3 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & DAYS_LATE < 3]),
+            UnitsArriveLessThan5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & DAYS_LATE < 5])) %>% 
   droplevels()
 
 # 4) OTS by Vendor Summary
@@ -116,12 +129,17 @@ SOT_by_Vendor <- SOT_Master %>%
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * DAYS_LATE[Lateness=="Late"]),
-            DaysLate5 = sum(Units[DAYS_LATE>5], na.rm = TRUE))%>%
+            DaysLate5 = sum(Units[DAYS_LATE>5], na.rm = TRUE),
+            UnitsArriveLessThanNeg5 = sum(Units[Lateness=="OnTime" & DAYS_LATE < -5]),
+            UnitsArriveLessThanNeg3 = sum(Units[Lateness=="OnTime" & DAYS_LATE < -3]),
+            UnitsArriveLessThan0 = sum(Units[Lateness=="OnTime" & DAYS_LATE < 0]),
+            UnitsArriveLessThan3 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & DAYS_LATE < 3]),
+            UnitsArriveLessThan5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & DAYS_LATE < 5])) %>% 
   droplevels()
 
 
 # Output 
-write_csv(OTS_by_Category[, c(1:4, 6:10, 5)], path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = '/' ))
+write_csv(OTS_by_Category[, c(1:4, 6:10, 5, 11:15)], path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = '/' ))
 write_csv(OTS_by_Vendor, path = paste(SOT_OTS_directory,  'OTS_by_Vendor.csv', sep = '/' ))
 
 write_csv(SOT_by_Category, path = paste(SOT_OTS_directory,  'SOT_by_Category.csv', sep = '/' ))
