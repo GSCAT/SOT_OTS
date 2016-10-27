@@ -145,6 +145,11 @@ SOT_by_Vendor <- SOT_Master %>%
             UnitsArriveLessThan5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & DAYS_LATE <= 5])) %>% 
   droplevels()
 
+SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
+OTS_Master_Summary_curr_week <- OTS_Master %>% filter(Week ==EOW) %>% summary() %>% as.data.frame() 
+
+write_csv(as.data.frame(SOT_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
 
 # Output 
 write_csv(OTS_by_Category[, c(1:4, 6:10, 5, 11:15)], path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = '/' ))
