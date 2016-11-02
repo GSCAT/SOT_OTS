@@ -10,9 +10,8 @@ library(rChoiceDialogs)
 ################
 # Create RODBC connection 
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
-sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-DBC_INFO <- sqlQuery(my_connect, 
-                     query = "SELECT  * from dbc.dbcinfo;")
+# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 #################
 
 #################
