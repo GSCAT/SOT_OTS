@@ -58,8 +58,8 @@ SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
 OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
 
 
-write_csv(SOT_Master_Summary, path = paste(SOT_OTS_directory,  paste('SOT_Master_Metadata', EOW, '.csv',sep = ""), sep = '/' ))
-write_csv(OTS_Master_Summary, path = paste(SOT_OTS_directory,  paste('OTS_Master_Metadata', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(SOT_Master_Summary, path = paste(SOT_OTS_directory,  paste('SOT_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(OTS_Master_Summary, path = paste(SOT_OTS_directory,  paste('OTS_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
 
 write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
@@ -188,7 +188,7 @@ OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable
 OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
 
 On_Time_Stock_table <- OTS_Master %>% 
-  filter(OTS_Master$Week <= 35) %>%
+  # filter(OTS_Master$Week <= 35) %>%
   group_by(Parent_Vendor, Month_Number,Week) %>%
   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]), 
             Total_Units_sum=sum(Units),
