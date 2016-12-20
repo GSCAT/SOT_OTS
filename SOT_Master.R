@@ -79,7 +79,8 @@ OTS_Master <- OTS_Master %>%
 SOT_Master <- SOT_Master %>% 
   filter(SOT_Master$ShipCancelWeek <= EOW,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
-         !grepl("dummy", Parent_Vendor, ignore.case = TRUE)) 
+         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
+         MetricShipDate <= Sys.Date()) 
 
 # Output tables
 
