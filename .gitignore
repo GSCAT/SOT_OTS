@@ -22,3 +22,7 @@ $RECYCLE.BIN/
 *.xlsx
 *.accdb
 .Rproj.user
+
+.RData
+.Rhistory
+.gitignore
