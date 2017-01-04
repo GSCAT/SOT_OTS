@@ -25,7 +25,7 @@ sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 
 
-path <- file.path( '~', 'SOT Weekly', '2016', 'Weekly', 'SOT_Master.R')
+# path <- file.path( '~', 'SOT Weekly', '2016', 'Weekly', 'SOT_Master.R')
 
 prompt_for_week <- function()
 { 
@@ -42,6 +42,10 @@ choose_file_directory <- function()
 SOT_OTS_directory <- choose_file_directory()
 
 EOW <- prompt_for_week()
+
+SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
+OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
+
 
 # date_range <- c(-6,-3,0,3,6)
 
@@ -80,7 +84,7 @@ SOT_Master <- SOT_Master %>%
   filter(SOT_Master$ShipCancelWeek <= EOW,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-         MetricShipDate <= Sys.Date()) 
+         MetricShipDate <= SOT_Data_Pulled) 
 
 # Output tables
 
