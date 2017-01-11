@@ -7,26 +7,21 @@ library(RJDBC)
 library(rChoiceDialogs)
 
 
-################
-# Create RODBC connection 
+
+# Create RODBC connection ----
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
-#################
 
-#################
-# Create RJDBC connection - In Dev
+# Create RJDBC connection - In Dev ----
 #Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
 # drv2 <- JDBC("com.teradata.jdbc.TeraConnectionPoolDataSource", "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\terajdbc4.jar;C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\tdgssconfig.jar")
 # conn <- dbConnect(drv2, "jdbc:teradata://tdprodcop1.gap.com", my_uid, my_pwd)
 # SOT_Master_RJDBC <- dbGetQuery(conn, 
 #                       query = "SELECT  * from dbc.dbcinfo;")
-#################
 
 
-
-# path <- file.path( '~', 'SOT Weekly', '2016', 'Weekly', 'SOT_Master.R')
-
+# Setup Environment Variables/Functions ----
 prompt_for_week <- function()
 { 
   n <- readline(prompt="Enter Week number: ")
@@ -46,18 +41,16 @@ EOW <- prompt_for_week()
 SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
 OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
 
-
-# date_range <- c(-6,-3,0,3,6)
-
-# Create SOT Master
+# Create Master Objects ----
 SOT_Master <- sqlQuery(my_connect, 
                      query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;")
 
 OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
-
+# Close connection ----
 close(my_connect)
 
+# Create/write Summary Metadata ----
 SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
 OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
 
@@ -65,14 +58,15 @@ OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
 write_csv(SOT_Master_Summary, path = paste(SOT_OTS_directory,  paste('SOT_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
 write_csv(OTS_Master_Summary, path = paste(SOT_OTS_directory,  paste('OTS_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
-
+# Write Raw files to .csv ----
 write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep = '/' ))
 
+# Save Raw objects ----
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
-
+# Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
   filter(OTS_Master$Week <= EOW,
         !is.na(OTS_Master$DC_NAME),
@@ -86,7 +80,14 @@ SOT_Master <- SOT_Master %>%
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          MetricShipDate <= SOT_Data_Pulled) 
 
-# Output tables
+# Create/write Metadata for Week subset ----
+SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
+OTS_Master_Summary_curr_week <- OTS_Master %>% filter(Week ==EOW) %>% summary() %>% as.data.frame() 
+
+write_csv(as.data.frame(SOT_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
+
+# Create Output Tables ----
 
 # 1) OTS by Category Summary
 OTS_by_Category <- OTS_Master %>%
@@ -153,13 +154,7 @@ SOT_by_Vendor <- SOT_Master %>%
             UnitsArriveLessThan5 = sum(Units[(Lateness=="OnTime" | Lateness == "Late") & DAYS_LATE <= 5])) %>% 
   droplevels()
 
-SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
-OTS_Master_Summary_curr_week <- OTS_Master %>% filter(Week ==EOW) %>% summary() %>% as.data.frame() 
-
-write_csv(as.data.frame(SOT_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
-write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
-
-# Output 
+# Output Tables to .csv ----
 write_csv(OTS_by_Category[, c(1:4, 6:10, 5, 11:15)], path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = '/' ))
 write_csv(OTS_by_Vendor, path = paste(SOT_OTS_directory,  'OTS_by_Vendor.csv', sep = '/' ))
 
@@ -174,6 +169,7 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EO
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory,  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
+# Experimental section ----
 # functions for Calculating SOT/OTS
 
 OTS_percent <- function(OTUnits, TotalUnits){

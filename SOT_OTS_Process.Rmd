@@ -1,6 +1,8 @@
 ---
 title: "SOT/OTS Weekly Process"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 
@@ -15,7 +17,17 @@ library(rChoiceDialogs)
 ```
 
 
-After loading the required libraries, create a connection to EDWP using the _RODBC_ library. Once you have stored your username and password as my_uid and my_pwd; and created a DSN, connect with a string similar to this (You may need to change the below if you gave your DSN an different  name). Then verify that we have successfully connected by performing a query on the dbcinfo table.
+After loading the required libraries, create a connection to EDWP using the _RODBC_ library. Once you have stored your username and password as **_my\_uid_** and **_my\_pwd_** ; and created a DSN, connect with a string similar to this (You may need to change the below if you gave your DSN an different  name). Then verify that we have successfully connected by performing a query on the dbcinfo table.
+
+<br>
+
+#### Set up
+```{r echo=FALSE}
+my_uid <- "Ke2l8b1"
+my_pwd <- "Discoverysts135"
+
+```
+
 ```{r}
 # Create RODBC connection ----
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
@@ -23,7 +35,9 @@ my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 ```
+<br>
 
+Now we need to create a few functions and store a few constants for later use.  
 ```{r eval=FALSE}
 # Setup Environment Variables/Functions----
 prompt_for_week <- function()
@@ -37,17 +51,38 @@ choose_file_directory <- function()
   v <- jchoose.dir()
   return(v)
 }
+```
+<br>
 
+We want to store our directory path as a string. The easiest way to do this is by opening a Java based file chooser (sometimes this has to be ran twice. It intermittently fails the first time). The code below will store a path to a directory of your choice.
+
+```{r eval=FALSE}
 SOT_OTS_directory <- choose_file_directory()
+```
+```{r echo=FALSE}
+SOT_OTS_directory <- "C:\\Users\\Ke2l8b1\\Documents\\SOT Weekly\\2016\\dev"
+```
 
+<br>
+![](C:\Users\Ke2l8b1\Documents\R\SOT OTS\choose_file_directory.png)
+<br>
+
+Now enter the week for which you are reporting. This will prompt you at the console.
+```{r eval=FALSE}
 EOW <- prompt_for_week()
 ```
 
-```{r include=FALSE}
+
+```{r echo=FALSE}
 EOW <- 48
 
 ```
 
+<br>
+
+#### Pulling data
+
+All tables are built from two _Master_ tables. We need to create them now via query to EDW.  
 ```{r eval=FALSE}
 # Create Master Objects ----
 SOT_Master <- sqlQuery(my_connect, 
@@ -56,7 +91,8 @@ SOT_Master <- sqlQuery(my_connect,
 OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
 ```
-
+<br>
+Close the connection:
 ```{r eval=FALSE}
 # Close connection ----
 close(my_connect)
@@ -70,12 +106,18 @@ OTS_conn <- url("ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/GSCAT/SOTMast
 load(SOT_conn)
 load(OTS_conn)
 ```
-
-```{r echo=FALSE}
+<br>
+The tables, we just created, have a field labeled _Data\_Pulled_ that is populated during _CREATE TABLE_ in Teradata. It indicates when the data was pulled from the IUF tables. Let's store the first value from each table for reference.
+```{r }
 SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
 OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
 ```
+<br>
 
+#### Generate Metadata
+
+<br>
+Let's now create and store some Metadata about our raw data frames...
 ```{r}
 # Create/write Summary Metadata ----
 SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
@@ -94,21 +136,25 @@ write_csv(SOT_Master_Summary, path = paste(
   ))
 
 ```
-
+...and also write our masters to .csv.
 ```{r}
 # Write Raw files to .csv ----
 write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep = '/' ))
 
 ```
+<br>
 
+Now let's save the Raw objects. These will be saved as binary files that can be quickly loaded into R. This will allow us to reproduce our results, at any time, using the same raw data.
 ```{r}
 # Save Raw objects ----
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 ```
+<br>
 
+We usually don't include all vendors (i.e. non-apparel); nor do we include the virtual DC (JPF). Clean them up with the below. 
 ```{r}
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
@@ -125,7 +171,37 @@ SOT_Master <- SOT_Master %>%
          MetricShipDate <= SOT_Data_Pulled) 
 
 ```
+<br>
 
+Let's also create Metadata for the current week and write it to csv for EDA purposes.
+```{r}
+# Create/write Metadata for Week subset ----
+SOT_Master_Summary_curr_week <-
+  SOT_Master %>% filter(ShipCancelWeek == EOW) %>% summary() %>% as.data.frame()
+
+OTS_Master_Summary_curr_week <-
+  OTS_Master %>% filter(Week == EOW) %>% summary() %>% as.data.frame()
+
+write_csv(
+  as.data.frame(SOT_Master_Summary_curr_week),
+  path = paste(
+    SOT_OTS_directory,
+    paste('SOT_Master_Metadata_curr_week', EOW, '.csv', sep = ""),
+    sep = '/'))
+
+write_csv(
+  as.data.frame(OTS_Master_Summary_curr_week),
+  path = paste(
+    SOT_OTS_directory,
+    paste('OTS_Master_Metadata_curr_week', EOW, '.csv', sep = ""),
+    sep = '/'))
+```
+<br>
+
+#### Building the Output Tables
+
+<br>
+We need to build 4 tables for output to the presentation layer. We need both a Category and Vendor view (for OTS and SOT), and need to create some new summary columns.
 ```{r}
 # Create Output Tables ----
 
@@ -226,30 +302,12 @@ SOT_by_Vendor <- SOT_Master %>%
   droplevels()
 
 ```
+<br>
 
-```{r}
-# Create/write Metadata for Week subset ----
-SOT_Master_Summary_curr_week <-
-  SOT_Master %>% filter(ShipCancelWeek == EOW) %>% summary() %>% as.data.frame()
+#### Output Files
+<br>
 
-OTS_Master_Summary_curr_week <-
-  OTS_Master %>% filter(Week == EOW) %>% summary() %>% as.data.frame()
-
-write_csv(
-  as.data.frame(SOT_Master_Summary_curr_week),
-  path = paste(
-    SOT_OTS_directory,
-    paste('SOT_Master_Metadata_curr_week', EOW, '.csv', sep = ""),
-    sep = '/'))
-
-write_csv(
-  as.data.frame(OTS_Master_Summary_curr_week),
-  path = paste(
-    SOT_OTS_directory,
-    paste('OTS_Master_Metadata_curr_week', EOW, '.csv', sep = ""),
-    sep = '/'))
-```
-
+Lastly, Let's output the data frames we created to csv so that we can use the presentation tool of our choice.
 ```{r}
 # Output Tables to .csv ----
 write_csv(OTS_by_Category[, c(1:4, 6:10, 5, 11:15)],
