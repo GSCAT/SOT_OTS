@@ -64,7 +64,7 @@ SOT_OTS_directory <- "C:\\Users\\Ke2l8b1\\Documents\\SOT Weekly\\2016\\dev"
 ```
 
 <br>
-![](C:\Users\Ke2l8b1\Documents\R\SOT OTS\choose_file_directory.png)
+![](C:\Users\Ke2l8b1\Documents\R\SOT OTS\choose_file_directory.png){ width=50% }
 <br>
 
 Now enter the week for which you are reporting. This will prompt you at the console.
@@ -148,8 +148,14 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep
 Now let's save the Raw objects. These will be saved as binary files that can be quickly loaded into R. This will allow us to reproduce our results, at any time, using the same raw data.
 ```{r}
 # Save Raw objects ----
-save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+save(
+SOT_Master,
+file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep)
+)
+save(
+OTS_Master,
+file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep)
+)
 
 ```
 <br>
