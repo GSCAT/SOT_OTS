@@ -38,8 +38,8 @@ SOT_OTS_directory <- choose_file_directory()
 
 EOW <- prompt_for_week()
 
-SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
-OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
+# load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+# load(file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 SOT_Master <- sqlQuery(my_connect, 
@@ -49,6 +49,12 @@ OTS_Master <- sqlQuery(my_connect,
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
 # Close connection ----
 close(my_connect)
+
+SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
+OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
+# Check date
+SOT_Data_Pulled
+OTS_Data_Pulled
 
 # Create/write Summary Metadata ----
 SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
@@ -65,6 +71,7 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep
 # Save Raw objects ----
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 

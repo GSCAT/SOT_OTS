@@ -6,7 +6,7 @@ output:
 ---
 
 
-```{r error=FALSE, message=FALSE, warning=FALSE}
+```{r libraries, error=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(readr)
 library(RODBC)
@@ -22,11 +22,6 @@ After loading the required libraries, create a connection to EDWP using the _ROD
 <br>
 
 #### Set up
-```{r echo=FALSE}
-my_uid <- "Ke2l8b1"
-my_pwd <- "Discoverysts135"
-
-```
 
 ```{r}
 # Create RODBC connection ----
