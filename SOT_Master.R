@@ -28,6 +28,12 @@ prompt_for_week <- function()
   return(as.integer(n))
 }
 
+prompt_for_year <- function()
+{ 
+  n <- readline(prompt="Enter Fiscal Year as YYYY: ")
+  return(as.integer(n))
+}
+
 choose_file_directory <- function()
 {
   v <- jchoose.dir()
@@ -37,6 +43,7 @@ choose_file_directory <- function()
 SOT_OTS_directory <- choose_file_directory()
 
 EOW <- prompt_for_week()
+fis_yr <- prompt_for_year()
 
 # load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 # load(file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
@@ -83,6 +90,7 @@ OTS_Master <- OTS_Master %>%
 
 SOT_Master <- SOT_Master %>% 
   filter(SOT_Master$ShipCancelWeek <= EOW,
+         SOT_Master$FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          MetricShipDate <= SOT_Data_Pulled) 
