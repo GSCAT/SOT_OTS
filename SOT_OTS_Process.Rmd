@@ -22,6 +22,11 @@ After loading the required libraries, create a connection to EDWP using the _ROD
 <br>
 
 #### Set up
+```{r echo=FALSE}
+my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
+my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
+```
+
 
 ```{r}
 # Create RODBC connection ----
