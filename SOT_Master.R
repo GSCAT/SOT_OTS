@@ -80,6 +80,7 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
+load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
@@ -95,6 +96,16 @@ SOT_Master <- SOT_Master %>%
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          MetricShipDate <= SOT_Data_Pulled) 
+
+SOT_Master_Unmeasured <- SOT_Master %>% 
+  filter(SOT_Master$ShipCancelWeek <= EOW,
+         SOT_Master$FISCAL_YEAR == fis_yr,
+         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
+         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
+         Lateness == "Unmeasured") 
+
+write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory,  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
+
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
