@@ -5,6 +5,7 @@ library(RODBC)
 library(formattable)
 library(RJDBC)
 library(rChoiceDialogs)
+library(ggvis)
 
 my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
 my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
@@ -252,5 +253,31 @@ View(SOT_by_Category)
 View(SOT_by_Vendor)
 
 
+Trans_delay_reason <-  SOT_Master %>% select(SHP_RSN_TYP_DESC, Units) %>% 
+  group_by(SHP_RSN_TYP_DESC) %>% 
+  summarize("Delayed Units" = sum(Units, na.rm = TRUE)) %>% 
+  arrange(desc(`Delayed Units`))
+
+Trans_delay_reason <-  SOT_Master %>% 
+  select(SHP_RSN_TYP_DESC, Units) %>% 
+  group_by(SHP_RSN_TYP_DESC) %>%  
+  plot(Trans_delay_reason$SHP_RSN_TYP_DESC, Trans_delay_reason$`Delayed Units`)
 
 
+Trans_delay_reason_vis <-  SOT_Master %>% 
+  select(SHP_RSN_TYP_DESC, Units) %>% 
+  group_by(SHP_RSN_TYP_DESC) %>%  
+  ggvis(~SHP_RSN_TYP_DESC, ~`Units`)  guide_axis("y", subdivide = 1, values = seq(0, 2000000, by = 500000))  %>% 
+  add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
+  add_axis("y", title = "")
+Trans_delay_reason_vis
+
+Trans_delay_reason_vis2 <-  SOT_Master %>% 
+  filter(SHP_RSN_TYP_DESC != "-") %>% 
+  select(SHP_RSN_TYP_DESC, Units) %>% 
+  group_by(SHP_RSN_TYP_DESC) %>%  
+  ggvis(~SHP_RSN_TYP_DESC, ~`Units`) %>% 
+  add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
+  add_axis("y", title = "")
+
+Trans_delay_reason_vis2
