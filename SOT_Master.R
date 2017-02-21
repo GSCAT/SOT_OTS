@@ -1,6 +1,5 @@
 library(dplyr)
 library(readr)
-library(RSQLServer)
 library(RODBC)
 library(formattable)
 library(RJDBC)
@@ -81,7 +80,9 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
-load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+# load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+
+# load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
@@ -253,18 +254,21 @@ View(SOT_by_Category)
 View(SOT_by_Vendor)
 
 
-Trans_delay_reason <-  SOT_Master %>% select(SHP_RSN_TYP_DESC, Units) %>% 
-  group_by(SHP_RSN_TYP_DESC) %>% 
+Trans_delay_reason <-  SOT_Master %>% select(ShipCancelWeek, SHP_RSN_TYP_DESC, Units) %>% 
+  filter(SOT_Master$ShipCancelWeek == EOW) %>% 
+  group_by(ShipCancelWeek, SHP_RSN_TYP_DESC) %>% 
   summarize("Delayed Units" = sum(Units, na.rm = TRUE)) %>% 
   arrange(desc(`Delayed Units`))
 
 Trans_delay_reason <-  SOT_Master %>% 
+  filter(SOT_Master$ShipCancelWeek == EOW) %>% 
   select(SHP_RSN_TYP_DESC, Units) %>% 
   group_by(SHP_RSN_TYP_DESC) %>%  
   plot(Trans_delay_reason$SHP_RSN_TYP_DESC, Trans_delay_reason$`Delayed Units`)
 
 
-Trans_delay_reason_vis <-  SOT_Master %>% 
+Trans_delay_reason_vis <-  SOT_Master %>%
+  filter(SOT_Master$ShipCancelWeek == EOW) %>% 
   select(SHP_RSN_TYP_DESC, Units) %>% 
   group_by(SHP_RSN_TYP_DESC) %>%  
   ggvis(~SHP_RSN_TYP_DESC, ~`Units`)  guide_axis("y", subdivide = 1, values = seq(0, 2000000, by = 500000))  %>% 
