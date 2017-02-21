@@ -3,6 +3,12 @@ library(readr)
 library(xlsx)
 library(tidyr)
 
+SOT_Master <- sqlQuery(my_connect, 
+                       query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER_FIS_2016;")
+close(my_connect)
+
+save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+
 Ship_Choice_status <- read.csv("Ship_Choice_Status.csv")
 
 Three_PL_ship_Choice <- SOT_Master %>%
@@ -42,8 +48,9 @@ ship_Choice <- SOT_Master %>%
   mutate("Transportation Delay Reason" = ifelse(SHP_RSN_TYP_DESC != "-", "Delay Reason", "")) %>%
   arrange(desc(`Vendor Units`))
 
-Perf_ship_choice <- ship_Choice %>%
-  group_by(ShipCancelWeek, Ship_Choice_Status, `Transportation Delay Reason`) %>% 
+Perf_ship_1st_choice <- ship_Choice %>%
+  #subset(ship_Choice$Ship_Choice_Status == 1) %>% 
+  group_by(ShipCancelWeek, Ship_Choice_Status) %>% 
   summarise("OnTimeUnits"= sum(`Vendor Units`[Lateness=="OnTime"]),
              "LateUnits" = sum(`Vendor Units`[Lateness=="Late"]),
                  "SOT %" = (sum(`Vendor Units`[Lateness=="OnTime"])/ sum(`Vendor Units`))*100,
@@ -51,8 +58,10 @@ Perf_ship_choice <- ship_Choice %>%
  # group_by(ShipCancelWeek) %>% 
   #  summarise("SOT % to Grand Total" = (sum(`OnTimeUnits`)/ sum(`Vendor Units`))*100) %>% 
   filter(`Units`>= 10000)
+
 # For January ----
 ship_Choice <- SOT_Master %>%
+  subset(ShipCancelMonth == 12) %>% 
   # subset(Lateness == "OnTime") %>%
   group_by(ReportingBrand, Category, ShipCancelMonth, SHIP_MODE_CD, Trade_Lane_Type, SALES_TERMS_CODE, ShipDateChoice, SHP_RSN_TYP_DESC, Lateness) %>% 
   summarise("Vendor Units" = sum(`Units`)) %>% 
