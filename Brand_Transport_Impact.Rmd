@@ -1,0 +1,236 @@
+---
+title: SOT Transportation Impact - **`r Brand_sub`**
+output:
+  html_notebook: default
+---
+<style>
+  .myTable td {
+    padding: 10px;
+    border-bottom: 1px solid black;
+    align-items: center
+  }
+</style>
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning = FALSE}
+library(dplyr)
+library(knitr)
+library(DT)
+library(plotly)
+library(dygraphs)
+library(xts)
+```
+
+Here is specific SOT information for Brand: **`r Brand_sub`**.  
+\newline
+
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning = FALSE}
+Brand_levels <- as.data.frame(levels(SOT_Master$ReportingBrand))
+
+```
+
+```{r echo =FALSE, message=FALSE, error=FALSE, warning = FALSE}
+Brand_sub <-  levels(SOT_Master$ReportingBrand)[13]
+
+```
+
+```{r include=FALSE, echo=FALSE, message=FALSE, error=FALSE, warning = FALSE, fig.width=6}
+lungDeaths <- cbind(mdeaths, fdeaths)
+dygraph(lungDeaths) %>%
+  dySeries("mdeaths", label = "Male") %>%
+  dySeries("fdeaths", label = "Female") %>%
+  dyOptions(stackedGraph = TRUE) %>%
+  dyRangeSelector(height = 20)
+```
+
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning = FALSE}
+Weekly_SOT <- SOT_Master %>% 
+  filter(ReportingBrand == Brand_sub) %>%
+  subset(Contract_Ship_Cancel >= "2017-01-29" & Contract_Ship_Cancel <= "2017-02-18") %>% 
+  group_by(Contract_Ship_Cancel) %>% 
+  summarise("On Time Units" = sum(Units[Lateness=="OnTime"], na.rm = TRUE),
+            "Late Units" = sum(Units[Lateness=="Late"], na.rm = TRUE),
+            "SOT Performance" = sum(`On Time Units`, na.rm=TRUE)/ (`On Time Units` + `Late Units`)*100,
+            "Transportation Delay Impact" = 
+              (sum(Units[Lateness=="Late" & SHP_RSN_TYP_DESC != "-"], na.rm = TRUE)/(`On Time Units` + `Late Units`))*100,
+            "Adjusted SOT" = `SOT Performance`+`Transportation Delay Impact`
+            ) %>% 
+  select(Contract_Ship_Cancel, `SOT Performance`, `Transportation Delay Impact`, `Adjusted SOT`) %>% 
+  arrange(Contract_Ship_Cancel) %>% 
+  as.data.frame()
+```
+
+Shipped On Time Performance for **`r Brand_sub`** is shown for the given *Contract Ship Cancel Date*. Period is: **`r min(Weekly_SOT$Contract_Ship_Cancel)`** to **`r max(Weekly_SOT$Contract_Ship_Cancel)`**
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning = FALSE, fig.width=7, fig.align='center'}
+rownames(Weekly_SOT) <- Weekly_SOT$Contract_Ship_Cancel 
+Weekly_SOT <- select(Weekly_SOT, `SOT Performance`, `Transportation Delay Impact`, `Adjusted SOT`)
+Weekly_SOT <- as.xts(Weekly_SOT)
+dygraph(Weekly_SOT) %>% 
+  # dySeries(label = "SOT %", name="SOT Performance") %>% 
+  dyRangeSelector()
+
+```
+
+<br>
+
+#### Impact of First Choice vs Closest Ship Date
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning = FALSE, fig.width=7, fig.align='center'}
+ship_Choice <- SOT_Master %>%
+  # subset(Lateness == "Late") %>%
+  group_by(ReportingBrand, Contract_Ship_Cancel, SHIP_MODE_CD, Trade_Lane_Type, SALES_TERMS_CODE, ShipDateChoice, SHP_RSN_TYP_DESC, Lateness) %>% 
+  summarise("Vendor Units" = sum(`Units`)) %>% 
+  right_join(Ship_Choice_status, by = c("SHIP_MODE_CD" = "SHIP_MODE_CD", "Trade_Lane_Type" = "Trade_Lane_Type", "SALES_TERMS_CODE" = "SALES_TERMS_CODE", "ShipDateChoice"="ShipDateChoice")) %>% 
+  mutate("Transportation Delay Reason" = ifelse(SHP_RSN_TYP_DESC != "-", "Delay Reason", "")) %>%
+  arrange(desc(`Vendor Units`))
+
+Perf_ship_1st_choice <- ship_Choice %>%
+  # subset(ship_Choice$Ship_Choice_Status == 1) %>% 
+  subset(Contract_Ship_Cancel >= "2017-01-29" & Contract_Ship_Cancel<= "2017-02-18") %>% 
+  group_by(Contract_Ship_Cancel) %>% 
+  summarise("OnTimeUnits"= sum(`Vendor Units`[Lateness=="OnTime"]),
+            "LateUnits" = sum(`Vendor Units`[Lateness=="Late"]),
+            "Unmeasured Units" = sum(`Vendor Units`[Lateness=="Unmeasured"]),
+            "SOT % (first Choice)" = (sum(`Vendor Units`[Lateness=="OnTime" & Ship_Choice_Status == 1 ], na.rm = TRUE)/ sum(`Vendor Units`[Lateness != "Unmeasured" & Ship_Choice_Status == 1], na.rm = TRUE))*100,
+            "SOT % (all)" = (sum(`Vendor Units`[Lateness=="OnTime"], na.rm = TRUE)/ sum(`Vendor Units`[Lateness != "Unmeasured"], na.rm = TRUE))*100,
+            "Impact" = sum(`SOT % (first Choice)`) - sum(`SOT % (all)`),
+            "Units"= sum(`Vendor Units`)) %>%
+  # group_by(ShipCancelWeek) %>% 
+  #  summarise("SOT % to Grand Total" = (sum(`OnTimeUnits`)/ sum(`Vendor Units`))*100) %>% 
+  filter(`Units`>= 10000)
+
+rownames(Perf_ship_1st_choice) <- Perf_ship_1st_choice$Contract_Ship_Cancel 
+Perf_ship_1st_choice <- Perf_ship_1st_choice %>%  select(`SOT % (first Choice)`, `SOT % (all)`, `Impact`)
+Weekly_SOT <- as.xts(Perf_ship_1st_choice)
+dygraph(Perf_ship_1st_choice) %>% 
+  # dySeries(label = "SOT %", name="SOT Performance") %>% 
+  dyRangeSelector()
+```
+
+<br>
+
+Looking at the YTD data, the Unit breakdwon by category for YTD is:
+
+```{r echo=FALSE, fig.align='center'}
+gen_Brand <- SOT_Master %>% filter(ReportingBrand == Brand_sub) %>% 
+  select(ReportingBrand,  Category, Units ) %>% 
+  group_by(ReportingBrand, Category) %>% 
+  summarise("SOT_Units" = sum(Units)) %>% 
+  arrange(desc(SOT_Units))
+
+kable(gen_Brand, "html", table.attr='class="myTable"', format.args = list(big.mark=","), caption = "YTD Units by Category and Vendor")
+```
+
+
+<br>
+
+```{r echo=FALSE}
+gen_Brand_Dec <- SOT_Master %>% filter(ReportingBrand == Brand_sub, 
+                                       FISCAL_YEAR==2017, 
+                                       grepl("2/25/17", Fiscal_Month, ignore.case = TRUE)) %>% 
+  select(Fiscal_Month, ReportingBrand, Category, Units ) %>% 
+  group_by(Fiscal_Month, ReportingBrand, Category) %>% 
+  summarise("SOT_Units" = sum(Units)) %>% 
+    arrange(desc(SOT_Units))
+```
+
+Looking only at the month of: **`r gen_Brand_Dec$Fiscal_Month[1]`**
+
+```{r echo=FALSE, fig.align='center'}
+kable(gen_Brand_Dec, format = "html", table.attr='class="myTable"', format.args= list(big.mark = ","), caption = paste("Units by Category and Vendor for ", gen_Brand_Dec$Fiscal_Month[1], sep = "" ))
+
+```
+
+<br>
+
+##### **Lateness by Brand and Parent Vendor:**
+
+To add some depth, we can look at the ***Lateness*** by brand and Category as well.  
+
+
+```{r echo=FALSE}
+gen_Late <- SOT_Master %>% filter(ReportingBrand == Brand_sub, 
+                                       FISCAL_YEAR==2017, 
+                                       grepl("2/25/17", Fiscal_Month, ignore.case = TRUE)) %>% 
+  select(Parent_Vendor,  Units, ReportingBrand, Lateness ) %>% 
+  group_by(Parent_Vendor,  ReportingBrand, Lateness) %>% 
+  summarise("SOT_Units" = sum(Units)) %>% 
+    arrange( desc(SOT_Units))
+datatable(format(gen_Late, big.mark = ","), extensions = 'Buttons', options = list(
+  pageLength = 5,
+  dom = 'Bflrtip',
+  buttons = list(
+  list(
+  extend = 'collection',
+  buttons = c('csv', 'excel', 'pdf'),
+  text = 'Download'
+  )
+  )), caption = paste("Lateness by Brand and Category for ", gen_Brand_Dec$Fiscal_Month[1], sep = "" ))
+```
+<br>
+```{r echo=FALSE, include = FALSE, warning= FALSE, message= FALSE, error=FALSE}
+gen_plot <- gen_Late %>% 
+  group_by(ReportingBrand, Lateness) %>% 
+  summarise("Shipped Units" = sum(SOT_Units)) 
+
+plot_ly(gen_plot, x = gen_plot$ReportingBrand, y = gen_plot$`Shipped Units`)
+```
+
+Or if you want to see the same thing for the YTD:
+
+
+```{r echo=FALSE}
+gen_Late <-
+  SOT_Master %>% filter(ReportingBrand == Brand_sub) %>%
+  select(Parent_Vendor, Units, ReportingBrand, Lateness) %>%
+  group_by(Parent_Vendor, ReportingBrand, Lateness) %>%
+  summarise("SOT_Units" = floor(sum(Units))) %>%
+  arrange((desc(SOT_Units)))
+  # kable(gen_Vendor_Late, "html", table.attr='class="myTable"',format.args= list(big.mark = ","), caption = "Lateness by Brand and Category for YTD")
+  datatable(
+  format(gen_Late, big.mark = ","), extensions = 'Buttons', options = list(
+  pageLength = 5,
+  dom = 'Bflrtip',
+  buttons = list(
+  list(
+  extend = 'collection',
+  buttons = c('csv', 'excel', 'pdf'),
+  text = 'Download'
+  )
+  )),
+  caption = "Lateness by Parent Vendor and Brand for YTD"
+  )
+```
+<br>
+
+Also, we can look at the raw data for the top 50 *Late* DPO's (by Units). This is quite a lot of columns, so you need to use the scroll bar.
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning = FALSE}
+full_details <- SOT_Master %>%
+  select(-1) %>% 
+  filter(ReportingBrand == Brand_sub,
+  FISCAL_YEAR == 2017,
+  Lateness == "Late") %>%
+  arrange(desc(Units))
+  
+  datatable(
+  format(head(full_details, n = 50), big.mark = ","),
+  extensions = 'Buttons',
+  options = list(
+  pageLength = 5,
+  dom = 'Bflrtip',
+  scrollX = TRUE,
+  buttons =
+  list(
+ 'colvis',
+  list(
+  extend = 'collection',
+  buttons = c('csv', 'excel', 'pdf'),
+  text = 'Download'
+  )
+  )
+  )
+  )
+```
