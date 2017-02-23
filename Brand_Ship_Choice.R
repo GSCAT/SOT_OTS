@@ -42,22 +42,33 @@ First_Choice <- Ship_Choice_status %>%
 # Ship Choice ----
 ship_Choice <- SOT_Master %>%
   # subset(Lateness == "Late") %>%
-  group_by(ReportingBrand, ShipCancelWeek, SHIP_MODE_CD, Trade_Lane_Type, SALES_TERMS_CODE, ShipDateChoice, SHP_RSN_TYP_DESC, Lateness) %>% 
+  group_by(ReportingBrand, Contract_Ship_Cancel, SHIP_MODE_CD, Trade_Lane_Type, SALES_TERMS_CODE, ShipDateChoice, SHP_RSN_TYP_DESC, Lateness) %>% 
   summarise("Vendor Units" = sum(`Units`)) %>% 
   right_join(Ship_Choice_status, by = c("SHIP_MODE_CD" = "SHIP_MODE_CD", "Trade_Lane_Type" = "Trade_Lane_Type", "SALES_TERMS_CODE" = "SALES_TERMS_CODE", "ShipDateChoice"="ShipDateChoice")) %>% 
   mutate("Transportation Delay Reason" = ifelse(SHP_RSN_TYP_DESC != "-", "Delay Reason", "")) %>%
   arrange(desc(`Vendor Units`))
 
 Perf_ship_1st_choice <- ship_Choice %>%
-  #subset(ship_Choice$Ship_Choice_Status == 1) %>% 
-  group_by(ShipCancelWeek, Ship_Choice_Status) %>% 
+  # subset(ship_Choice$Ship_Choice_Status == 1) %>% 
+  subset(Contract_Ship_Cancel >= "2016-01-31" & Contract_Ship_Cancel<= "2017-01-28") %>% 
+  group_by(Contract_Ship_Cancel) %>% 
   summarise("OnTimeUnits"= sum(`Vendor Units`[Lateness=="OnTime"]),
-             "LateUnits" = sum(`Vendor Units`[Lateness=="Late"]),
-                 "SOT %" = (sum(`Vendor Units`[Lateness=="OnTime"])/ sum(`Vendor Units`))*100,
-                  "Units"= sum(`Vendor Units`)) %>%
- # group_by(ShipCancelWeek) %>% 
+            "LateUnits" = sum(`Vendor Units`[Lateness=="Late"]),
+            "Unmeasured Units" = sum(`Vendor Units`[Lateness=="Unmeasured"]),
+            "SOT % (first Choice)" = (sum(`Vendor Units`[Lateness=="OnTime" & Ship_Choice_Status == 1 ], na.rm = TRUE)/ sum(`Vendor Units`[Lateness != "Unmeasured" & Ship_Choice_Status == 1], na.rm = TRUE))*100,
+            "SOT % (all)" = (sum(`Vendor Units`[Lateness=="OnTime"], na.rm = TRUE)/ sum(`Vendor Units`[Lateness != "Unmeasured"], na.rm = TRUE))*100,
+            "Impact" = sum(`SOT % (first Choice)`) - sum(`SOT % (all)`),
+            "Units"= sum(`Vendor Units`)) %>%
+  # group_by(ShipCancelWeek) %>% 
   #  summarise("SOT % to Grand Total" = (sum(`OnTimeUnits`)/ sum(`Vendor Units`))*100) %>% 
   filter(`Units`>= 10000)
+
+rownames(Perf_ship_1st_choice) <- Perf_ship_1st_choice$Contract_Ship_Cancel 
+Perf_ship_1st_choice <- Perf_ship_1st_choice %>%  select(`SOT % (first Choice)`, `SOT % (all)`, `Impact`)
+Weekly_SOT <- as.xts(Perf_ship_1st_choice)
+dygraph(Perf_ship_1st_choice) %>% 
+  # dySeries(label = "SOT %", name="SOT Performance") %>% 
+  dyRangeSelector()
 
 # For January ----
 ship_Choice <- SOT_Master %>%
