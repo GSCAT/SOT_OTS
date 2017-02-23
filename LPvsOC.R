@@ -60,12 +60,13 @@ close(my_connect)
 #          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
 #          Lateness == "Unmeasured") 
 
-TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet4")
+TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet1")
 
 SOT_Master_FOB <- SOT_Master %>% 
   subset(SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O") %>% 
   droplevels() %>% 
-  left_join(TTP_table, by = c("XFR_PT_COUNTRY_CODE" = "TP.Code", "DC_GEO_LOC" = "Geo.Description")) %>% 
-  mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel)
+  left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
+  mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
+         "Days Late to OC" = `Planned OC (Derived)`- ACTUAL_ORIGIN_CONSOL_LCL_DATE)
 
-
+save(SOT_Master_FOB, file = "SOT_Master_FOB.rda")

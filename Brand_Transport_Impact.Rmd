@@ -30,7 +30,7 @@ Brand_levels <- as.data.frame(levels(SOT_Master$ReportingBrand))
 ```
 
 ```{r echo =FALSE, message=FALSE, error=FALSE, warning = FALSE}
-Brand_sub <-  levels(SOT_Master$ReportingBrand)[13]
+Brand_sub <-  levels(SOT_Master$ReportingBrand)[8]
 
 ```
 
