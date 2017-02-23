@@ -2,6 +2,7 @@ library(dplyr)
 library(readr)
 library(xlsx)
 library(tidyr)
+library(dygraphs)
 
 SOT_Master <- sqlQuery(my_connect, 
                        query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER_FIS_2016;")
