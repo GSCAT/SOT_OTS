@@ -5,6 +5,9 @@ library(formattable)
 library(rChoiceDialogs)
 library(ggvis)
 library(xlsx)
+library(plotly)
+library(tidyr)
+library(mosaic)
 
 # Setup Environment Variables/Functions ----
 prompt_for_week <- function()
@@ -40,7 +43,8 @@ my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 SOT_Master <- sqlQuery(my_connect, 
-                       query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER_TTP;")
+                       query = "SELECT * from SRAA_SAND.VIEW_SOT_MASTER_FIS_2016
+                       where ShipCancelMonth = 12;")
 close(my_connect)
 
 # load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
@@ -63,10 +67,83 @@ close(my_connect)
 TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet1")
 
 SOT_Master_FOB <- SOT_Master %>% 
-  subset(SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O") %>% 
+  subset(SALES_TERMS_CODE == "FOB" & 
+           SHIP_MODE_CD == "O" & 
+           DAYS_LATE >= (-45) & 
+           DAYS_LATE <= 45 & 
+           !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
+            Lateness == "Late") %>% 
   droplevels() %>% 
   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
-         "Days Late to OC" = `Planned OC (Derived)`- ACTUAL_ORIGIN_CONSOL_LCL_DATE)
+         "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
+         "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,
+         "LP vs Anticipated" = ACTUAL_LP_LCL_DATE - SHIP_CANCEL_DATE,
+         "Probable Failure" = derivedVariable("Trans" = (`Days Anticipated vs Contract` >= 1 & `Days Anticipated vs Contract` <= 6),
+                                              "Vendor" =( `Days Anticipated vs Contract` >= 7),
+                                              "Trans" = `LP vs Anticipated` >= 2,
+                                            .method = "first"),
+         "Test by OC" = derivedVariable("Vendor" = (DAYS_LATE < `Days Late to OC`),
+                                        "Trans" = (DAYS_LATE > `Days Late to OC`),
+                                        "Vendor" = (DAYS_LATE - `Days Late to OC`) == 0,
+                                        .method = "first")
+         )
+
+
+SOT_Master_FOB <- SOT_Master %>% 
+  subset(SALES_TERMS_CODE == "FOB" & 
+           SHIP_MODE_CD == "O" & 
+           DAYS_LATE >= (-45) & 
+           DAYS_LATE <= 45 & 
+           !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
+            Lateness == "Late") %>% 
+  droplevels() %>% 
+  left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
+  mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
+         "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
+         "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,
+         "LP vs Anticipated" = ACTUAL_LP_LCL_DATE - SHIP_CANCEL_DATE,
+         "Probable Failure" = derivedVariable("Trans" = (((Contract_Ship_Cancel + 1) < SHIP_CANCEL_DATE) & (SHIP_CANCEL_DATE < (Contract_Ship_Cancel + 6))),
+                                              "Vendor" =(SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 6)),
+                                              "Trans" = ACTUAL_LP_LCL_DATE > SHIP_CANCEL_DATE,
+                                            .method = "first"),
+         "Test by OC" = derivedVariable("Vendor" = (DAYS_LATE < `Days Late to OC`),
+                                        "Trans" = (DAYS_LATE > `Days Late to OC`),
+                                        "Vendor" = (DAYS_LATE - `Days Late to OC`) == 0,
+                                        .method = "first")
+         )
+
+write.xlsx(SOT_Master_FOB, file = paste(SOT_OTS_directory, "SOT_MASTER_FOB.xlsx", sep = "\\"))
+write_csv(SOT_Master_FOB[, c(1:6, 8:15, 17:43, 7, 16, 44:48)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB.csv", sep = "\\"))
 
 save(SOT_Master_FOB, file = "SOT_Master_FOB.rda")
+
+
+
+
+load("SOT_Master_FOB.rda")
+
+SOT_Master_FOB
+
+
+p <- SOT_Master_FOB %>% 
+  subset(`Days Late to OC`<= 45) %>% 
+  subset(`Days Late to OC`>= (-45)) %>% 
+  
+  
+ p %>% plot_ly(x = ~p$ACTUAL_ORIGIN_CONSOL_LCL_DATE, y = ~p$`Days Late to OC`) %>% 
+   add_markers() %>% 
+   add_lines()
+
+s <- SOT_Master_FOB[1:100,] %>% 
+  subset(`Days Late to OC`<= 45 & `Days Late to OC`>= (-45)) %>%
+  subset(`Days Late to OC` !=0 | DAYS_LATE != 0) %>% 
+  arrange(ACTUAL_ORIGIN_CONSOL_LCL_DATE) %>% 
+  plot_ly() %>% 
+  add_markers(x = ~as.Date(p$ACTUAL_ORIGIN_CONSOL_LCL_DATE), y = ~p$`Days Late to OC`) %>% 
+  add_markers(x = ~as.Date(p$ACTUAL_ORIGIN_CONSOL_LCL_DATE), y = ~p$`DAYS_LATE`) %>% 
+  add_lines(x = ~p$`Days Late to OC`, y = ~p$`DAYS_LATE`)
+  # gather(key = "Milestone", value = "Days Late", `DAYS_LATE`, `Days Late to OC`)
+
+plot_ly(s, x = ~s$`Days Late to OC`, y = ~s$ACTUAL_ORIGIN_CONSOL_LCL_DATE, z = ~s$`DAYS_LATE`, color = s$Lateness) %>% 
+  add_markers()
