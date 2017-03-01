@@ -4,6 +4,7 @@ library(RODBC)
 library(formattable)
 library(rChoiceDialogs)
 library(ggvis)
+library(readxl)
 library(xlsx)
 library(plotly)
 library(tidyr)
@@ -64,8 +65,10 @@ close(my_connect)
 #          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
 #          Lateness == "Unmeasured") 
 
+# Import TTP table ----
 TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet1")
 
+# Join and mutate SOT_Master with TTP table ----
 SOT_Master_FOB <- SOT_Master %>% 
   subset(SALES_TERMS_CODE == "FOB" & 
            SHIP_MODE_CD == "O" & 
@@ -89,7 +92,7 @@ SOT_Master_FOB <- SOT_Master %>%
                                         .method = "first")
          )
 
-
+# Subset of SOT_Master_FOB ----
 SOT_Master_FOB <- SOT_Master %>% 
   subset(SALES_TERMS_CODE == "FOB" & 
            SHIP_MODE_CD == "O" & 
@@ -112,13 +115,21 @@ SOT_Master_FOB <- SOT_Master %>%
                                         "Vendor" = (DAYS_LATE - `Days Late to OC`) == 0,
                                         .method = "first")
          )
+# Convert difftime to integer ----
+SOT_Master_FOB$`Planned OC (Derived)` <- as.integer(SOT_Master_FOB$`Planned OC (Derived)`)
+SOT_Master_FOB$`Days Late to OC` <- as.integer(SOT_Master_FOB$`Days Late to OC`)
+SOT_Master_FOB$`Days Anticipated vs Contract` <- as.integer(SOT_Master_FOB$`Days Anticipated vs Contract`)
+SOT_Master_FOB$`LP vs Anticipated` <- as.integer(SOT_Master_FOB$`LP vs Anticipated`)
 
-write.xlsx(SOT_Master_FOB, file = paste(SOT_OTS_directory, "SOT_MASTER_FOB.xlsx", sep = "\\"))
+write.xlsx(as.data.frame(TTP_table), file = paste(SOT_OTS_directory, "SOT_MASTER_FOB.xlsx", sep = "\\"))
+write_csv(as.data.frame(On_Time_Stock_table), path = paste(SOT_OTS_directory, "OTS.csv", sep = "\\"))
+
 write_csv(SOT_Master_FOB[, c(1:6, 8:15, 17:43, 7, 16, 44:48)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB.csv", sep = "\\"))
+
 
 save(SOT_Master_FOB, file = "SOT_Master_FOB.rda")
 
-
+library(XLConnect)
 
 
 load("SOT_Master_FOB.rda")

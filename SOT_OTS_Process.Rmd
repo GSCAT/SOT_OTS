@@ -64,7 +64,8 @@ SOT_OTS_directory <- "C:\\Users\\Ke2l8b1\\Documents\\SOT Weekly\\2016\\dev"
 ```
 
 <br>
-![](C:\Users\Ke2l8b1\Documents\R\SOT OTS\choose_file_directory.png){ width=50% }
+
+![](C:\Users\Ke2l8b1\Documents\R\SOT OTS\choose_file_directory.png)
 <br>
 
 Now enter the week for which you are reporting. This will prompt you at the console.
