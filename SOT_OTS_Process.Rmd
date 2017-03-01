@@ -107,17 +107,21 @@ OTS_conn <- url("ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/GSCAT/SOTMast
 load(SOT_conn)
 load(OTS_conn)
 ```
+
 <br>
 The tables, we just created, have a field labeled _Data\_Pulled_ that is populated during _CREATE TABLE_ in Teradata. It indicates when the data was pulled from the IUF tables. Let's store the first value from each table for reference.
+
 ```{r }
 SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
 OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
 ```
+
 <br>
 
 #### Generate Metadata
 
 <br>
+
 Let's now create and store some Metadata about our raw data frames...
 ```{r}
 # Create/write Summary Metadata ----
