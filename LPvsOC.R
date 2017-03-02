@@ -45,7 +45,7 @@ sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 SOT_Master <- sqlQuery(my_connect, 
                        query = "SELECT * from SRAA_SAND.VIEW_SOT_MASTER_FIS_2016
-                       where ShipCancelMonth = 12;")
+                       where (ShipCancelMonth = 12 and FISCAL_YEAR = 2016) or (ShipCancelMonth = 1 and  FISCAL_YEAR= 2017);")
 close(my_connect)
 
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
@@ -120,28 +120,36 @@ SOT_Master_FOB <- SOT_Master %>%
 
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
-  subset(SALES_TERMS_CODE == "FOB" & 
-           SHIP_MODE_CD == "O" & 
+  subset(
+    # SALES_TERMS_CODE == "FOB" & 
+           # SHIP_MODE_CD == "O" & 
            DAYS_LATE >= (-45) & 
-           DAYS_LATE <= 45 & 
-           !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
-            Lateness == "Late") %>% 
-  droplevels() %>% 
+           DAYS_LATE <= 45) %>%  
+           # !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
+            # Lateness == "Late") %>% 
+  #droplevels() %>% 
   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
          "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
          "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,
          "LP vs Anticipated" = ACTUAL_LP_LCL_DATE - SHIP_CANCEL_DATE,
-         "Probable Failure" = derivedVariable("Trans" = (((Contract_Ship_Cancel + 3) < SHIP_CANCEL_DATE) & (SHIP_CANCEL_DATE < (Contract_Ship_Cancel + 6))),
-                                              "Vendor" =(SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 6)),
-                                              "Trans" = (ACTUAL_LP_LCL_DATE + 2) > SHIP_CANCEL_DATE,
-                                            .method = "first"),
-         "Test by OC" = derivedVariable("Vendor" = (DAYS_LATE < `Days Late to OC`),
-                                        "Trans" = (DAYS_LATE > `Days Late to OC`),
+         "Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O" & !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE), derivedVariable("Trans" = (( SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 3)) & (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6))),
+                                              "Vendor" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & (SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7))),
+                                              #"Trans" = (ACTUAL_LP_LCL_DATE + 2) > SHIP_CANCEL_DATE,
+                                              .default = "NA",
+                                            .method = "first"), "Not Tested"),
+         "Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O" & !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE), derivedVariable("Vendor" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` > `Planned OC (Derived)` & (DAYS_LATE <= `Days Late to OC`)),
+                                        "Trans" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` > `Planned OC (Derived)` & (DAYS_LATE >= `Days Late to OC`)),
+                                        "Trans" = ((`ACTUAL_ORIGIN_CONSOL_LCL_DATE` <= `Planned OC (Derived)`) & (DAYS_LATE > `Days Late to OC`)),
                                         "Vendor" = (DAYS_LATE - `Days Late to OC`) == 0,
-                                        .method = "first"),
+                                        .default = "NA",
+                                        .method = "first"), "Not Tested"),
          "Match?" = `Probable Failure` == `Test by OC`
          )
+
+SOT_Master_FOB$`Probable Failure` <- as.factor(SOT_Master_FOB$`Probable Failure`)
+SOT_Master_FOB$`Test by OC` <- as.factor(SOT_Master_FOB$`Test by OC`)
+
 # Convert difftime to integer ----
 SOT_Master_FOB$`Planned OC (Derived)` <- as.integer(SOT_Master_FOB$`Planned OC (Derived)`)
 SOT_Master_FOB$`Days Late to OC` <- as.integer(SOT_Master_FOB$`Days Late to OC`)
@@ -151,7 +159,7 @@ SOT_Master_FOB$`LP vs Anticipated` <- as.integer(SOT_Master_FOB$`LP vs Anticipat
 write.xlsx(as.data.frame(SOT_Master_FOB), file = "SOT_MASTER_FOB.xlsx")
 write_csv(as.data.frame(On_Time_Stock_table), path = paste(SOT_OTS_directory, "OTS.csv", sep = "\\"))
 
-write_csv(SOT_Master_FOB[, c(1:5, 9:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 44:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB.csv", sep = "\\"))
+write_csv(SOT_Master_FOB[, c(1:5, 9:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 44:45, 47:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB.csv", sep = "\\"))
 
 
 save(SOT_Master_FOB, file = "SOT_Master_FOB.rda")
