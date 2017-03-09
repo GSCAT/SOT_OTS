@@ -129,14 +129,14 @@ TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet1")
 
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
-  # subset(
+   # subset(
   #   # SALES_TERMS_CODE == "FOB" & 
   #          # SHIP_MODE_CD == "O" & 
   #          DAYS_LATE >= (-45) & 
   #          DAYS_LATE <= 45) %>%  
-  #          # !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
+   #         !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE)) %>% 
   #           # Lateness == "Late") %>% 
-  # #droplevels() %>% 
+  droplevels() %>% 
   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
          "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
@@ -170,15 +170,24 @@ SOT_Master_FOB <- SOT_Master %>%
   mutate("Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FCA" & SHIP_MODE_CD == "O" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Probable Failure`)) %>% 
   mutate("Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Probable Failure`)) %>% 
   mutate("Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "CFR" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Probable Failure`)) %>% 
+  mutate("Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "EXW", "Vendor", `Probable Failure`)) %>% 
+  mutate("Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "DDP"& ShipDateChoice == "DCON", "Vendor", `Probable Failure`)) %>% 
+  mutate("Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "DDU" & ShipDateChoice == "OC", "Vendor", `Probable Failure`)) %>% 
   
-  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FCA" & SHIP_MODE_CD == "O" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "FCA Ocean", `Probable Failure`)) %>% 
-  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "FOB AIR", `Probable Failure`)) %>% 
-  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "CFR" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "CFR AIR", `Probable Failure`)) %>% 
+  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FCA" & SHIP_MODE_CD == "O" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "FCA Ocean", `Sub Reason`)) %>% 
+  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "FOB AIR", `Sub Reason`)) %>% 
+  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "CFR" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "CFR AIR", `Sub Reason`)) %>% 
+  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "EXW", "EXW", `Sub Reason`)) %>% 
+  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "DDP" & ShipDateChoice == "DCON", "DDP DCON", `Sub Reason`)) %>% 
+  mutate("Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "DDU" & ShipDateChoice == "OC", "DDU OC", `Sub Reason`)) %>% 
   
   mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FCA" & SHIP_MODE_CD == "O" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Test by OC`)) %>% 
   mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Test by OC`)) %>% 
-  mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "CFR" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Test by OC`))
-
+  mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "CFR" & SHIP_MODE_CD == "A" & ACTUAL_ORIGIN_CONSOL_LCL_DATE > (Contract_Ship_Cancel +2), "Vendor", `Test by OC`)) %>% 
+  mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "EXW", "Vendor", `Test by OC`)) %>% 
+  mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "DDP"& ShipDateChoice == "DCON", "Vendor", `Test by OC`)) %>% 
+  mutate("Test by OC" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "DDU" & ShipDateChoice == "OC", "Vendor", `Test by OC`))
+  
 SOT_Master_FOB$`Probable Failure` <- as.factor(SOT_Master_FOB$`Probable Failure`)
 SOT_Master_FOB$`Test by OC` <- as.factor(SOT_Master_FOB$`Test by OC`)
 SOT_Master_FOB$XFR_Point_Place <- as.factor(SOT_Master_FOB$XFR_Point_Place)
