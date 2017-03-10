@@ -145,6 +145,7 @@ SOT_Master_FOB <- SOT_Master %>%
          "Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O", 
                                       derivedVariable("Transportation" = (( SHIP_CANCEL_DATE > (Contract_Ship_Cancel)) & (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6))),
                                               "Vendor" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & (SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7))),
+                                              "Transportation" = (ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & ( SHIP_CANCEL_DATE <= (Contract_Ship_Cancel))),
                                               "Vendor" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` > `Planned OC (Derived)`),
                                               "Transportation" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` <= `Planned OC (Derived)`),
                                               #"Trans" = (ACTUAL_LP_LCL_DATE + 2) > SHIP_CANCEL_DATE,
@@ -153,6 +154,7 @@ SOT_Master_FOB <- SOT_Master %>%
          "Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O", 
                                      derivedVariable("Test1" = (( SHIP_CANCEL_DATE > (Contract_Ship_Cancel)) & (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6))),
                                                      "Test2" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & (SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7))),
+                                                     "Test2b" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & ( SHIP_CANCEL_DATE <= (Contract_Ship_Cancel))),
                                                      "Test3" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` > `Planned OC (Derived)`),
                                                      "Test3" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` <= `Planned OC (Derived)`),
                                                      #"Trans" = (ACTUAL_LP_LCL_DATE + 2) > SHIP_CANCEL_DATE,
@@ -203,7 +205,7 @@ SOT_Master_FOB$`LP vs Anticipated` <- as.integer(SOT_Master_FOB$`LP vs Anticipat
 write.xlsx(as.data.frame(SOT_Master_FOB), file = "SOT_MASTER_FOB.xlsx")
 write_csv(as.data.frame(On_Time_Stock_table), path = paste(SOT_OTS_directory, "OTS.csv", sep = "\\"))
 
-write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB.csv", sep = "\\"))
+write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB2.csv", sep = "\\"))
 
 
 
