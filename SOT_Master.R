@@ -97,7 +97,8 @@ SOT_Master <- SOT_Master %>%
          SOT_Master$FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-         MetricShipDate <= SOT_Data_Pulled) 
+         MetricShipDate <= SOT_Data_Pulled) %>% 
+  droplevels()
 
 SOT_Master_Unmeasured <- SOT_Master %>% 
   filter(SOT_Master$ShipCancelWeek <= EOW,
