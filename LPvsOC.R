@@ -79,53 +79,7 @@ SOT_Master <- SOT_Master %>%
 # Import TTP table ----
 TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet1")
 
-# # Join and mutate SOT_Master with TTP table ----
-# SOT_Master_FOB <- SOT_Master %>% 
-#   subset(SALES_TERMS_CODE == "FOB" & 
-#            SHIP_MODE_CD == "O" & 
-#            DAYS_LATE >= (-45) & 
-#            DAYS_LATE <= 45 & 
-#            !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
-#             Lateness == "Late") %>% 
-#   droplevels() %>% 
-#   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
-#   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
-#          "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
-#          "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,
-#          "LP vs Anticipated" = ACTUAL_LP_LCL_DATE - SHIP_CANCEL_DATE,
-#          "Probable Failure" = derivedVariable("Transportation" = (`Days Anticipated vs Contract` >= 1 & `Days Anticipated vs Contract` <= 6),
-#                                               "Vendor" =( `Days Anticipated vs Contract` >= 7),
-#                                               "Trans" = `LP vs Anticipated` >= 2,
-#                                             .method = "first"),
-#          "Test by OC" = derivedVariable("Vendor" = (DAYS_LATE < `Days Late to OC`),
-#                                         "Trans" = (DAYS_LATE > `Days Late to OC`),
-#                                         "Vendor" = (DAYS_LATE - `Days Late to OC`) == 0,
-#                                         .method = "first")
-#          )
-# 
-# # Subset of SOT_Master_FOB v1 ----
-# SOT_Master_FOB <- SOT_Master %>% 
-#   subset(SALES_TERMS_CODE == "FOB" & 
-#            SHIP_MODE_CD == "O" & 
-#            DAYS_LATE >= (-45) & 
-#            DAYS_LATE <= 45 & 
-#            !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE) &
-#             Lateness == "Late") %>% 
-#   droplevels() %>% 
-#   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
-#   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
-#          "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
-#          "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,
-#          "LP vs Anticipated" = ACTUAL_LP_LCL_DATE - SHIP_CANCEL_DATE,
-#          "Probable Failure" = derivedVariable("Trans" = (((Contract_Ship_Cancel + 1) < SHIP_CANCEL_DATE) & (SHIP_CANCEL_DATE < (Contract_Ship_Cancel + 6))),
-#                                               "Vendor" =(SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 6)),
-#                                               "Trans" = ACTUAL_LP_LCL_DATE > SHIP_CANCEL_DATE,
-#                                             .method = "first"),
-#          "Test by OC" = derivedVariable("Vendor" = (DAYS_LATE < `Days Late to OC`),
-#                                         "Trans" = (DAYS_LATE > `Days Late to OC`),
-#                                         "Vendor" = (DAYS_LATE - `Days Late to OC`) == 0,
-#                                         .method = "first")
-#          )
+
 
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
@@ -143,8 +97,8 @@ SOT_Master_FOB <- SOT_Master %>%
          "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,
          "LP vs Anticipated" = ACTUAL_LP_LCL_DATE - SHIP_CANCEL_DATE,
          "Probable Failure" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O", 
-                                      derivedVariable("Transportation" = (( SHIP_CANCEL_DATE > (Contract_Ship_Cancel)) & (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6))),
-                                              "Vendor" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & (SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7))),
+                                      derivedVariable("Transportation" = (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6)),
+                                              "Vendor" =(SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7)),
                                               # "Transportation" = (ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & ( SHIP_CANCEL_DATE <= (Contract_Ship_Cancel))),
                                               "Vendor" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` > `Planned OC (Derived)`),
                                               "Transportation" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` <= `Planned OC (Derived)`),
@@ -152,8 +106,8 @@ SOT_Master_FOB <- SOT_Master %>%
                                               .default = "NA",
                                             .method = "first"), "Not Tested"),
          "Sub Reason" = ifelse(Lateness == "Late" & SALES_TERMS_CODE == "FOB" & SHIP_MODE_CD == "O", 
-                                     derivedVariable("Test1" = (( SHIP_CANCEL_DATE > (Contract_Ship_Cancel)) & (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6))),
-                                                     "Test2" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & (SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7))),
+                                     derivedVariable("Test1" = ( SHIP_CANCEL_DATE >= (Contract_Ship_Cancel)) & (SHIP_CANCEL_DATE <= (Contract_Ship_Cancel + 6)),
+                                                     "Test2" =(SHIP_CANCEL_DATE >= (Contract_Ship_Cancel + 7)),
                                                      #"Test2b" =(ACTUAL_LP_LCL_DATE > (Contract_Ship_Cancel + 2) & ( SHIP_CANCEL_DATE <= (Contract_Ship_Cancel))),
                                                      "Test3" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` > `Planned OC (Derived)`),
                                                      "Test3" = (`ACTUAL_ORIGIN_CONSOL_LCL_DATE` <= `Planned OC (Derived)`),
@@ -195,6 +149,9 @@ SOT_Master_FOB$`Test by OC` <- as.factor(SOT_Master_FOB$`Test by OC`)
 SOT_Master_FOB$XFR_Point_Place <- as.factor(SOT_Master_FOB$XFR_Point_Place)
 SOT_Master_FOB$`Sub Reason` <- as.factor(SOT_Master_FOB$`Sub Reason`)
 
+write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB2.csv", sep = "\\"))
+
+cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
 brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
 
 Trans_output <- SOT_Master_FOB %>%
@@ -207,7 +164,6 @@ Trans_output <- SOT_Master_FOB %>%
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
   select(ReportingBrand, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`)
 
-cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
 
 Trans_output_Category <- SOT_Master_FOB %>%
   filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 4, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
@@ -240,7 +196,6 @@ Trans_output_YTD <- SOT_Master_FOB %>%
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
   select(ReportingBrand, `SOT %`, `SOT Variance from Target`, `Transport_Impact`,`Air_Vendor_Impact`)
 
-cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
 
 Trans_output_Category_YTD <- SOT_Master_FOB %>%
   filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
@@ -271,41 +226,6 @@ write_csv(Trans_output_GapInc_YTD, paste(SOT_OTS_directory, "Trans_output_GapInc
 
 
 
-
-# Trans_output_YTD <- SOT_Master_FOB %>%
-#   filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
-#   group_by(ReportingBrand) %>% 
-#   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
-#             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured"))) %>% 
-#   right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
-#   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
-#   select(ReportingBrand, `SOT %`, `SOT Variance from Target`, `Transport_Impact`)
-# 
-# cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
-# 
-# Trans_output_Category_YTD <- SOT_Master_FOB %>%
-#   filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
-#   group_by(Category) %>% 
-#   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
-#             "Vendor SOT" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE) + 
-#                               sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured"))) %>% 
-#   right_join(as.data.frame(cat_vec), by = c("Category" = "cat_vec")) %>% 
-#   mutate("SOT Variance from Target" = `SOT %` -.95,
-#          "Vendor Variance from Target" = `Vendor SOT` - .95) %>% 
-#   select(Category, `SOT %`, `SOT Variance from Target`, `Vendor SOT`, `Vendor Variance from Target`)
-# 
-# Trans_output_GapInc_YTD <- SOT_Master_FOB %>%
-#   filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
-#   # group_by(ReportingBrand) %>% 
-#   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
-#             "Vendor SOT" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE) + 
-#                               sum(subset(Units, `Probable Failure` == "Transportation", Lateness = "Late" )))/sum(subset(Units, Lateness != "Unmeasured"))) %>% 
-#   # right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
-#   mutate("SOT Variance from Target" = `SOT %` -.95,
-#          "Vendor Variance from Target" = `Vendor SOT` - .95) %>% 
-#   select( `SOT %`, `SOT Variance from Target`, `Vendor SOT`, `Vendor Variance from Target`)
-
-
 # Convert difftime to integer ----
 SOT_Master_FOB$`Planned OC (Derived)` <- as.integer(SOT_Master_FOB$`Planned OC (Derived)`)
 SOT_Master_FOB$`Days Late to OC` <- as.integer(SOT_Master_FOB$`Days Late to OC`)
@@ -315,7 +235,6 @@ SOT_Master_FOB$`LP vs Anticipated` <- as.integer(SOT_Master_FOB$`LP vs Anticipat
 write.xlsx(as.data.frame(SOT_Master_FOB), file = "SOT_MASTER_FOB.xlsx")
 write_csv(as.data.frame(On_Time_Stock_table), path = paste(SOT_OTS_directory, "OTS.csv", sep = "\\"))
 
-write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_FOB2.csv", sep = "\\"))
 
 
 Transportation_table<- SOT_Master_FOB %>%
