@@ -155,7 +155,7 @@ cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Ac
 brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
 
 Trans_output <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 4,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek == EOW,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   group_by(ReportingBrand) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
     "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -166,7 +166,7 @@ Trans_output <- SOT_Master_FOB %>%
 
 
 Trans_output_Category <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 4, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   group_by(Category) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured")), 
@@ -176,7 +176,7 @@ Trans_output_Category <- SOT_Master_FOB %>%
   select(Category, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`)
 
 Trans_output_GapInc <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 4, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   # group_by(ReportingBrand) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -187,7 +187,7 @@ Trans_output_GapInc <- SOT_Master_FOB %>%
 
 
 Trans_output_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   group_by(ReportingBrand) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -198,7 +198,7 @@ Trans_output_YTD <- SOT_Master_FOB %>%
 
 
 Trans_output_Category_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   group_by(Category) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -208,7 +208,7 @@ Trans_output_Category_YTD <- SOT_Master_FOB %>%
   select(Category, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`)
 
 Trans_output_GapInc_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= 5, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   # group_by(ReportingBrand) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation" )))/sum(subset(Units, Lateness != "Unmeasured")),
