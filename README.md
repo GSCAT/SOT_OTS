@@ -4,9 +4,12 @@ SOT/OTS Weekly Process
 -   [Set up Environment](#set-up-environment)
 -   [Pulling Data](#pulling-data)
 -   [Check the date of Data Refresh in EDW](#check-the-date-of-data-refresh-in-edw)
+-   [Generate Metadata](#generate-metadata)
 -   [Save Binary Objects](#save-binary-objects)
 -   [Clean-up Unwanted Records](#clean-up-unwanted-records)
 -   [Summary Statistics](#summary-statistics)
+-   [Building the Output Tables](#building-the-output-tables)
+-   [Output Files](#output-files)
 
 ``` r
 library(dplyr)
@@ -94,8 +97,7 @@ OTS_Master <- sqlQuery(my_connect,
 close(my_connect)
 ```
 
-Check the date of Data Refresh in EDW
--------------------------------------
+#### Check the date of Data Refresh in EDW
 
 <br> The tables, we just created, have a field labeled *Data\_Pulled* that is populated during *CREATE TABLE* in Teradata. It indicates when the data was pulled from the IUF tables. Let's store the first value from each table for reference.
 
@@ -140,8 +142,7 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep
 
 <br>
 
-Save Binary Objects
--------------------
+#### Save Binary Objects
 
 Now let's save the Raw objects. These will be saved as binary files that can be quickly loaded into R. This will allow us to reproduce our results, at any time, using the same raw data.
 
@@ -159,8 +160,7 @@ file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.s
 
 <br>
 
-Clean-up Unwanted Records
--------------------------
+#### Clean-up Unwanted Records
 
 We usually don't include all vendors (i.e. non-apparel); nor do we include the virtual DC (JPF). Clean them up with the below.
 
@@ -182,8 +182,7 @@ SOT_Master <- SOT_Master %>%
 
 <br>
 
-Summary Statistics
-------------------
+#### Summary Statistics
 
 Let's also create summary statistics for the current week and write it to csv for EDA purposes.
 
