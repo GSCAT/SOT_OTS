@@ -77,7 +77,7 @@ SOT_Master <- SOT_Master %>%
 #          Lateness == "Unmeasured") 
 
 # Import TTP table ----
-TTP_table <- read.xlsx(file= "TTP.xlsx", sheetName = "Sheet1")
+TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP.xlsx", sheetName = "Sheet1")
 
 
 
