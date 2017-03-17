@@ -10,7 +10,7 @@ close(my_connect)
 
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
-Ship_Choice_status <- read.csv("Ship_Choice_Status.csv")
+Ship_Choice_status <- read.csv("Ship_Choice\\Ship_Choice_Status.csv")
 
 Three_PL_ship_Choice <- SOT_Master %>%
   subset(Category == "3P & Lic" & Lateness == "Late" & ShipCancelWeek == EOW) %>% 
