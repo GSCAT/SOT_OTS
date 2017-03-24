@@ -1,8 +1,10 @@
 ---
 title: "SOT/OTS Weekly Process"
 output:
-  pdf_document: default
-  html_notebook: default
+   github_document:
+    html_preview: FALSE
+    toc: TRUE
+    toc_depth: 2
 ---
 
 
@@ -21,7 +23,7 @@ After loading the required libraries, create a connection to EDWP using the _ROD
 
 <br>
 
-#### Set up
+#### Set up Environment
 ```{r echo=FALSE}
 my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
 my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
@@ -36,6 +38,7 @@ sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 ```
 <br>
+
 
 Now we need to create a few functions and store a few constants for later use.  
 ```{r eval=FALSE}
@@ -54,6 +57,7 @@ choose_file_directory <- function()
 ```
 <br>
 
+
 We want to store our directory path as a string. The easiest way to do this is by opening a Java based file chooser (sometimes this has to be ran twice. It intermittently fails the first time). The code below will store a path to a directory of your choice.
 
 ```{r eval=FALSE}
@@ -65,7 +69,7 @@ SOT_OTS_directory <- "C:\\Users\\Ke2l8b1\\Documents\\SOT Weekly\\2016\\dev"
 
 <br>
 
-![](C:\Users\Ke2l8b1\Documents\R\SOT OTS\choose_file_directory.png)
+![](https://github.com/kwbonds/SOT_OTS/blob/master/Markdown/choose_file_directory.PNG)
 <br>
 
 Now enter the week for which you are reporting. This will prompt you at the console.
@@ -81,7 +85,7 @@ EOW <- 48
 
 <br>
 
-#### Pulling data
+#### Pulling Data
 
 All tables are built from two _Master_ tables. We need to create them now via query to EDW.  
 ```{r eval=FALSE}
@@ -108,6 +112,7 @@ load(SOT_conn)
 load(OTS_conn)
 ```
 
+#### Check the date of Data Refresh in EDW
 <br>
 The tables, we just created, have a field labeled _Data\_Pulled_ that is populated during _CREATE TABLE_ in Teradata. It indicates when the data was pulled from the IUF tables. Let's store the first value from each table for reference.
 
@@ -123,7 +128,7 @@ OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
 <br>
 
 Let's now create and store some Metadata about our raw data frames...
-```{r}
+```{r eval= FALSE}
 # Create/write Summary Metadata ----
 SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
 OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
@@ -142,7 +147,7 @@ write_csv(SOT_Master_Summary, path = paste(
 
 ```
 ...and also write our masters to .csv.
-```{r}
+```{r eval=FALSE}
 # Write Raw files to .csv ----
 write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep = '/' ))
@@ -150,8 +155,10 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep
 ```
 <br>
 
+#### Save Binary Objects
+
 Now let's save the Raw objects. These will be saved as binary files that can be quickly loaded into R. This will allow us to reproduce our results, at any time, using the same raw data.
-```{r}
+```{r eval=FALSE}
 # Save Raw objects ----
 save(
 SOT_Master,
@@ -164,6 +171,8 @@ file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.s
 
 ```
 <br>
+
+#### Clean-up Unwanted Records
 
 We usually don't include all vendors (i.e. non-apparel); nor do we include the virtual DC (JPF). Clean them up with the below. 
 ```{r}
@@ -184,8 +193,10 @@ SOT_Master <- SOT_Master %>%
 ```
 <br>
 
-Let's also create Metadata for the current week and write it to csv for EDA purposes.
-```{r}
+#### Summary Statistics
+
+Let's also create summary statistics for the current week and write it to csv for EDA purposes.
+```{r eval=FALSE}
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <-
   SOT_Master %>% filter(ShipCancelWeek == EOW) %>% summary() %>% as.data.frame()
@@ -319,7 +330,7 @@ SOT_by_Vendor <- SOT_Master %>%
 <br>
 
 Lastly, Let's output the data frames we created to csv so that we can use the presentation tool of our choice.
-```{r}
+```{r eval=FALSE}
 # Output Tables to .csv ----
 write_csv(OTS_by_Category[, c(1:4, 6:10, 5, 11:15)],
           path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = '/'))
