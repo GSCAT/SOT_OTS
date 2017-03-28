@@ -55,6 +55,13 @@ SOT_Master <- sqlQuery(my_connect,
 
 OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
+
+# OTS_Master <- sqlQuery(my_connect, 
+#                           query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER_TEST;")
+
+# save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object_TEST.rtf', sep = .Platform$file.sep ))
+
+
 # Close connection ----
 close(my_connect)
 
