@@ -43,38 +43,9 @@ my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
-SOT_Master <- sqlQuery(my_connect, 
-                       query = "SELECT * from SRAA_SAND.VIEW_SOT_MASTER_FIS_2016
-                       where (ShipCancelMonth = 12 and FISCAL_YEAR = 2016) or (ShipCancelMonth = 1 and  FISCAL_YEAR= 2017);")
-close(my_connect)
 
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
-# For Week 4 ----
-load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep ))
-SOT_Master <- SOT_Master %>% 
-  filter(SOT_Master$ShipCancelWeek <= EOW,
-         SOT_Master$FISCAL_YEAR == fis_yr,
-         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
-         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-         MetricShipDate <= SOT_Data_Pulled) 
-
-# load(file = paste(SOT_OTS_directory,  'SOT_Master.rda', sep = .Platform$file.sep)) ----
-# load(file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
-
-# SOT_Master <- SOT_Master %>% 
-#   filter(SOT_Master$ShipCancelWeek <= EOW,
-#          SOT_Master$FISCAL_YEAR == fis_yr,
-#          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
-#          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-#          MetricShipDate <= SOT_Data_Pulled) 
-# 
-# SOT_Master_Unmeasured <- SOT_Master %>% 
-#   filter(SOT_Master$ShipCancelWeek <= EOW,
-#          SOT_Master$FISCAL_YEAR == fis_yr,
-#          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
-#          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-#          Lateness == "Unmeasured") 
 
 # Import TTP table ----
 TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP.xlsx", sheetName = "Sheet1")
@@ -83,13 +54,7 @@ TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP.xlsx", sheetName = "She
 
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
-   # subset(
-  #   # SALES_TERMS_CODE == "FOB" & 
-  #          # SHIP_MODE_CD == "O" & 
-  #          DAYS_LATE >= (-45) & 
-  #          DAYS_LATE <= 45) %>%  
-   #         !is.na(ACTUAL_ORIGIN_CONSOL_LCL_DATE)) %>% 
-  #           # Lateness == "Late") %>% 
+
   droplevels() %>% 
   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
@@ -243,7 +208,7 @@ write_csv(Trans_output_Category_YTD, paste(SOT_OTS_directory, "Trans_output_cate
 write_csv(Trans_output_GapInc_YTD, paste(SOT_OTS_directory, "Trans_output_GapInc_YTD.csv", sep = .Platform$file.sep))
 
 
-
+# Parking Lot - Don't run ----
 # Convert difftime to integer ----
 SOT_Master_FOB$`Planned OC (Derived)` <- as.integer(SOT_Master_FOB$`Planned OC (Derived)`)
 SOT_Master_FOB$`Days Late to OC` <- as.integer(SOT_Master_FOB$`Days Late to OC`)
