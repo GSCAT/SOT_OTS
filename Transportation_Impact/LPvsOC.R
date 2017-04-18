@@ -210,49 +210,6 @@ write_csv(Trans_output_Category_YTD, paste(SOT_OTS_directory, "Trans_output_cate
 write_csv(Trans_output_GapInc_YTD, paste(SOT_OTS_directory, "Trans_output_GapInc_YTD.csv", sep = .Platform$file.sep))
 
 
-# by Vendor ----
-
-vendor_df <- SOT_Master_FOB %>% 
-  select(Parent_Vendor, Units) %>% 
-  group_by(Parent_Vendor) %>% 
-  summarise("Total Units" = sum(Units)) %>% 
-  arrange(desc(`Total Units`))
-
-Trans_output_Vendor <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek == EOW,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
-  group_by(Parent_Vendor) %>% 
-  summarise(
-    "Blank" = '',
-    "SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Air_Vendor_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Vendor_non_Air_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Unmeasured_Impact" = 1 - sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `SOT %`),
-    "Total_Impact" = sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `Unmeasured_Impact` + `SOT %`)) %>% 
-  right_join(vendor_df[1:50,], by = c("Parent_Vendor" = "Parent_Vendor")) %>% 
-  mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
-  select(Parent_Vendor, `Blank`, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
-
-
-Trans_output_Vendor_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
-  group_by(Parent_Vendor) %>% 
-  summarise(
-    "Blank" = '',
-    "SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Air_Vendor_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Vendor_non_Air_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
-    "Unmeasured_Impact" = 1 - sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `SOT %`),
-    "Total_Impact" = sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `Unmeasured_Impact` + `SOT %`)) %>% 
-  right_join(vendor_df[1:50,], by = c("Parent_Vendor" = "Parent_Vendor")) %>% 
-  mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
-  select(Parent_Vendor, `Blank`, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
-
-write_csv(Trans_output_Vendor, paste(SOT_OTS_directory, "Trans_output_Vendor.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_Vendor_YTD, paste(SOT_OTS_directory, "Trans_output_Vendor_YTD.csv", sep = .Platform$file.sep))
-
-
 # Parking Lot - Don't run ----
 # Convert difftime to integer 
 SOT_Master_FOB$`Planned OC (Derived)` <- as.integer(SOT_Master_FOB$`Planned OC (Derived)`)
