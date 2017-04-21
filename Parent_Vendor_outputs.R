@@ -1,5 +1,6 @@
 
 # by Vendor ----
+dir.create((file.path(SOT_OTS_directory, "Impact_files")))
 
 vendor_df <- SOT_Master_FOB %>% 
   filter(FISCAL_YEAR == fis_yr,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
@@ -52,5 +53,5 @@ Trans_output_Vendor_YTD <- SOT_Master_FOB %>%
 Trans_output_Vendor[is.na(Trans_output_Vendor)] <- "-"
 Trans_output_Vendor_YTD[is.na(Trans_output_Vendor_YTD)] <- "-"
 
-write_csv(Trans_output_Vendor, paste(SOT_OTS_directory, "Trans_output_Vendor.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_Vendor_YTD, paste(SOT_OTS_directory, "Trans_output_Vendor_YTD.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_Vendor, paste(SOT_OTS_directory, "Impact_files", "Trans_output_Vendor.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_Vendor_YTD, paste(SOT_OTS_directory,"Impact_files", "Trans_output_Vendor_YTD.csv", sep = .Platform$file.sep))
