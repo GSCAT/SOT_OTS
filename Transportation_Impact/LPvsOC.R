@@ -4,12 +4,9 @@ library(RODBC)
 library(formattable)
 library(rChoiceDialogs)
 library(ggvis)
-library(readxl)
-library(xlsx)
-library(plotly)
-library(tidyr)
-library(mosaic)
 
+# Only Run this first section if the weekly SOT_Master is insufficient
+# i.e. Only necessary if starting from scratch
 # Setup Environment Variables/Functions ----
 prompt_for_week <- function()
 { 
@@ -38,23 +35,31 @@ fis_yr <- prompt_for_year()
 my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
 my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
 
-# Create RODBC connection ----
+
+
+# Create RODBC connection 
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-
-
-# Import TTP table ----
+# ----
+# ----
+# Begin here if SOT_Master was built from the Weekly report ----
+# Import TTP table if necessary i.e. changes made ----
 TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP.xlsx", sheetName = "Sheet1")
 
+library(readxl)
+library(xlsx)
+library(plotly)
+library(tidyr)
+library(mosaic)
 
+dir.create((file.path(SOT_OTS_directory, "Impact_files")))
 
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
-
   droplevels() %>% 
   left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
@@ -114,9 +119,9 @@ SOT_Master_FOB$`Test by OC` <- as.factor(SOT_Master_FOB$`Test by OC`)
 SOT_Master_FOB$XFR_Point_Place <- as.factor(SOT_Master_FOB$XFR_Point_Place)
 SOT_Master_FOB$`Sub Reason` <- as.factor(SOT_Master_FOB$`Sub Reason`)
 
-write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "SOT_MASTER_Impact_adhoc.csv", sep = "\\"))
+write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "Impact_files", "SOT_MASTER_Impact_adhoc.csv", sep = "\\"))
 
-save(SOT_Master_FOB, file = paste(SOT_OTS_directory,  'SOT_Master_FOB.rda', sep = .Platform$file.sep))
+save(SOT_Master_FOB, file = paste(SOT_OTS_directory, "Impact_files",  'SOT_Master_FOB.rda', sep = .Platform$file.sep))
 
 cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
 brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
@@ -163,7 +168,7 @@ Trans_output_GapInc <- SOT_Master_FOB %>%
 
 
 Trans_output_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(FISCAL_YEAR == fis_yr,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>%
   group_by(ReportingBrand) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -177,7 +182,7 @@ Trans_output_YTD <- SOT_Master_FOB %>%
 
 
 Trans_output_Category_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(FISCAL_YEAR == fis_yr,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>%
   group_by(Category) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -190,7 +195,7 @@ Trans_output_Category_YTD <- SOT_Master_FOB %>%
   select(Category, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
 Trans_output_GapInc_YTD <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek >= 1 & ShipCancelWeek <= EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(FISCAL_YEAR == fis_yr,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>%
   # group_by(ReportingBrand) %>% 
   summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -202,12 +207,12 @@ Trans_output_GapInc_YTD <- SOT_Master_FOB %>%
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
   select(`SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
-write_csv(Trans_output, paste(SOT_OTS_directory, "Trans_output.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_Category, paste(SOT_OTS_directory, "Trans_output_category.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_GapInc, paste(SOT_OTS_directory, "Trans_output_GapInc.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_YTD, paste(SOT_OTS_directory, "Trans_output_YTD.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_Category_YTD, paste(SOT_OTS_directory, "Trans_output_category_YTD.csv", sep = .Platform$file.sep))
-write_csv(Trans_output_GapInc_YTD, paste(SOT_OTS_directory, "Trans_output_GapInc_YTD.csv", sep = .Platform$file.sep))
+write_csv(Trans_output, paste(SOT_OTS_directory, "Impact_files",  "Trans_output.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_Category, paste(SOT_OTS_directory, "Impact_files",  "Trans_output_category.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_GapInc, paste(SOT_OTS_directory, "Impact_files",  "Trans_output_GapInc.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_YTD, paste(SOT_OTS_directory, "Impact_files",  "Trans_output_YTD.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_Category_YTD, paste(SOT_OTS_directory, "Impact_files", "Trans_output_category_YTD.csv", sep = .Platform$file.sep))
+write_csv(Trans_output_GapInc_YTD, paste(SOT_OTS_directory, "Impact_files", "Trans_output_GapInc_YTD.csv", sep = .Platform$file.sep))
 
 
 # Parking Lot - Don't run ----
