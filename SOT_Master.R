@@ -93,6 +93,7 @@ save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep =
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
+  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   filter(OTS_Master$Week <= EOW,
         !is.na(OTS_Master$DC_NAME),
         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
@@ -100,6 +101,7 @@ OTS_Master <- OTS_Master %>%
         !grepl("JPF", DC_NAME, ignore.case = TRUE)) 
 
 SOT_Master <- SOT_Master %>% 
+  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   filter(SOT_Master$ShipCancelWeek <= EOW,
          SOT_Master$FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
@@ -108,6 +110,7 @@ SOT_Master <- SOT_Master %>%
   droplevels()
 
 SOT_Master_Unmeasured <- SOT_Master %>% 
+  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   filter(SOT_Master$ShipCancelWeek <= EOW,
          SOT_Master$FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
@@ -115,7 +118,9 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          Lateness == "Unmeasured") 
 
 write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory,  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
-
+# Write out the cleaned master files ----
+write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_clean.csv', sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_clean.csv', sep = '/' ))
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
@@ -128,7 +133,6 @@ write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_dire
 
 # 1) OTS by Category Summary
 OTS_by_Category <- OTS_Master %>%
-  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   group_by(ReportingBrand, Category, Month_Number,Week, DC_NAME) %>%
   summarise(TotalUnits= sum(Units), 
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
@@ -144,7 +148,7 @@ OTS_by_Category <- OTS_Master %>%
 
 # 2) OTS by Vendor Summary
 OTS_by_Vendor <- OTS_Master %>%
-  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
+  # filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   group_by(Vendor_Rank, Parent_Vendor, Month_Number,Week) %>%
   summarise(TotalUnits= sum(Units), 
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
@@ -161,7 +165,7 @@ OTS_by_Vendor <- OTS_Master %>%
 
 # 3) SOT by Category Summary
 SOT_by_Category <- SOT_Master %>%
-  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
+  # filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   group_by(ReportingBrand, Category, ShipCancelMonth, ShipCancelWeek) %>%
   summarise(TotalUnits= sum(Units), 
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
@@ -177,7 +181,7 @@ SOT_by_Category <- SOT_Master %>%
 
 # 4) SOT by Vendor Summary
 SOT_by_Vendor <- SOT_Master %>%
-  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
+  # filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
   group_by(Vendor_Rank, Parent_Vendor, ShipCancelMonth, ShipCancelWeek) %>%
   summarise(TotalUnits= sum(Units), 
             OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
