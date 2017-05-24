@@ -93,17 +93,17 @@ save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep =
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
-  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
-  filter(OTS_Master$Week <= EOW,
-        !is.na(OTS_Master$DC_NAME),
+  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>% 
+  filter(Week <= EOW,
+        !is.na(DC_NAME),
         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
         !grepl("JPF", DC_NAME, ignore.case = TRUE)) 
 
 SOT_Master <- SOT_Master %>% 
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
-  filter(SOT_Master$ShipCancelWeek <= EOW,
-         SOT_Master$FISCAL_YEAR == fis_yr,
+  filter(ShipCancelWeek <= EOW,
+         FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          MetricShipDate <= SOT_Data_Pulled) %>% 
@@ -111,8 +111,8 @@ SOT_Master <- SOT_Master %>%
 
 SOT_Master_Unmeasured <- SOT_Master %>% 
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
-  filter(SOT_Master$ShipCancelWeek <= EOW,
-         SOT_Master$FISCAL_YEAR == fis_yr,
+  filter(ShipCancelWeek <= EOW,
+         FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          Lateness == "Unmeasured") 
