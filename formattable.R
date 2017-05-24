@@ -1,4 +1,6 @@
 library(formattable)
+library(DT)
+# library(plotly)
 
 color.picker <- function(z){
   if(is.na(z)){return("black")}
@@ -19,15 +21,14 @@ sign_formatter <- formatter("span",
                                                              ifelse(x < 0, "DarkRed", "black"))))
 
 sign__bg_formatter <- formatter("span",
-                            style = x ~ style(color = ifelse(x > 0, "DarkGreen",
+                                style = x ~ style(color = ifelse(x > 0, "DarkGreen",
                                                             ifelse(x < 0, "DarkRed", "black"))))
 
 
 formatter(.tag = "span", style = function(x) style(display = "block", 
                                                    padding = "0 4px", 
                                                    `border-radius` = "4px", 
-                                                   `background-color` = csscolor(gradient(as.numeric(x), 
-                                                                                                                                      ...))))
+                                                   `background-color` = csscolor(gradient(as.numeric(x), ...))))
 
 SOT_tile <-  formatter(.tag = "span", style = function(x) style(display = "block", 
                                                    padding = "0 4px", 
@@ -47,10 +48,10 @@ above_avg_bold <- formatter("span",
 change_names <- function(x) {
   names(x) <- c("Brand", "Shipped On Time to Contract %", "% Variance from Target (95%)", "Transportation Impact", "Vendor Impact (Air)", "Vendor Impact (non-Air)", "Unmeasured Impact", "Total Impact")
 }
-
-change_units <- function(x){
-  
-}
+# 
+# change_units <- function(x){
+#   
+# }
 
 names(Trans_output) <- change_names(Trans_output)
 

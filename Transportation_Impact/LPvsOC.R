@@ -247,7 +247,7 @@ SOT_Master_FOB
 
 p <- SOT_Master_FOB %>% 
   subset(`Days Late to OC`<= 45) %>% 
-  subset(`Days Late to OC`>= (-45)) %>% 
+  subset(`Days Late to OC`>= (-45))
   
   
  p %>% plot_ly(x = ~p$ACTUAL_ORIGIN_CONSOL_LCL_DATE, y = ~p$`Days Late to OC`) %>% 
