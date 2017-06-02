@@ -49,7 +49,7 @@ Trans_output_Vendor_YTD <- SOT_Master_FOB %>%
   # arrange(Category, desc(Units)) %>% 
   right_join(as.data.frame(cat_vec), by = c("Category" = "cat_vec"))%>% 
   select(Parent_Vendor, `Blank`, Units, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
-
+# Replace NA's with "-" ----
 Trans_output_Vendor[is.na(Trans_output_Vendor)] <- "-"
 Trans_output_Vendor_YTD[is.na(Trans_output_Vendor_YTD)] <- "-"
 
