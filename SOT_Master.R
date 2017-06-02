@@ -2,7 +2,8 @@ library(dplyr)
 library(readr)
 library(RODBC)
 library(formattable)
-library(RJDBC)
+#library(RJDBC)
+# Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
 library(rChoiceDialogs)
 library(ggvis)
 
@@ -16,6 +17,7 @@ sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 # Create RJDBC connection - In Dev ----
 #Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
+#Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
 # drv2 <- JDBC("com.teradata.jdbc.TeraConnectionPoolDataSource", "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\terajdbc4.jar;C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\tdgssconfig.jar")
 # conn <- dbConnect(drv2, "jdbc:teradata://tdprodcop1.gap.com", my_uid, my_pwd)
 # SOT_Master_RJDBC <- dbGetQuery(conn, 
@@ -75,17 +77,22 @@ OTS_Data_Pulled
 SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
 OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
 
+dir.create((file.path(SOT_OTS_directory, "Summary_Files")))
+dir.create((file.path(SOT_OTS_directory, "RAW_Files")))
+dir.create((file.path(SOT_OTS_directory, "RAW_Objects")))
+dir.create((file.path(SOT_OTS_directory, "Clean_Files")))
+dir.create((file.path(SOT_OTS_directory, "Master_Files")))
 
-write_csv(SOT_Master_Summary, path = paste(SOT_OTS_directory,  paste('SOT_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
-write_csv(OTS_Master_Summary, path = paste(SOT_OTS_directory,  paste('OTS_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(SOT_Master_Summary, path = paste(SOT_OTS_directory, "Summary_Files", paste('SOT_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(OTS_Master_Summary, path = paste(SOT_OTS_directory, "Summary_Files", paste('OTS_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
 # Write Raw files to .csv ----
-write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_Raw.csv', sep = '/' ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_Raw.csv', sep = '/' ))
+write_csv(SOT_Master, path = paste(SOT_OTS_directory, "RAW_Files",  'SOT_Master_Raw.csv', sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory, "RAW_Files",  'OTS_Master_Raw.csv', sep = '/' ))
 
 # Save Raw objects ----
-save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+save(SOT_Master, file = paste(SOT_OTS_directory, "RAW_Objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+save(OTS_Master, file = paste(SOT_OTS_directory, "RAW_Objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
@@ -117,17 +124,17 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          Lateness == "Unmeasured") 
 
-write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory,  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
+write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
 # Write out the cleaned master files ----
-write_csv(SOT_Master, path = paste(SOT_OTS_directory,  'SOT_Master_clean.csv', sep = '/' ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory,  'OTS_Master_clean.csv', sep = '/' ))
+write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean.csv', sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = '/' ))
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
 OTS_Master_Summary_curr_week <- OTS_Master %>% filter(Week ==EOW) %>% summary() %>% as.data.frame() 
 
-write_csv(as.data.frame(SOT_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
-write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_directory,  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(as.data.frame(SOT_Master_Summary_curr_week), path = paste(SOT_OTS_directory, "Summary_Files",  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_directory, "Summary_Files",  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = '/' ))
 
 # Create Output Tables ----
 
@@ -203,12 +210,12 @@ write_csv(SOT_by_Category, path = paste(SOT_OTS_directory,  'SOT_by_Category.csv
 write_csv(SOT_by_Vendor, path = paste(SOT_OTS_directory,  'SOT_by_Vendor.csv', sep = '/' ))
 
 # YTD Masters
-write_csv(SOT_Master, path = paste(SOT_OTS_directory,  paste('SOT_Master_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
+write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
 
 # 7 day Masters
-write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory,  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
-write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory,  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
+write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 
 # Experimental section ----
 # functions for Calculating SOT/OTS
