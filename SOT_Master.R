@@ -48,8 +48,8 @@ SOT_OTS_directory <- choose_file_directory()
 EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
-# load(file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-# load(file = paste(SOT_OTS_directory,  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 SOT_Master <- sqlQuery(my_connect, 
@@ -250,7 +250,7 @@ On_Time_Stock_table <- On_Time_Stock_table %>% mutate("OTS_Percent_value"= OTS_P
 
 
 
-# Experimental section
+# Experimental section ----
 On_Time_Stock_table <- OTS_Master %>% 
   #filter(OTS_Master$Week <= 30) %>%
   group_by(Parent_Vendor, Month_Number,Week) %>%
