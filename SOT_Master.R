@@ -6,6 +6,9 @@ library(formattable)
 # Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
 library(rChoiceDialogs)
 library(ggvis)
+library(tidyr)
+library(mosaic)
+
 
 my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
 my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
@@ -125,6 +128,21 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          Lateness == "Unmeasured") 
 
 write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
+
+########## FIX UNITS in OTS_MASTER #############
+OTS_Master <- OTS_Master %>% 
+  # filter(`Week` == 21) %>% 
+  group_by(DEST_PO_ID) %>% 
+  mutate("Old Units" = Units) %>% 
+  mutate("Rem_Units" = 
+           ifelse(test = Lateness == "Late", 
+                  (sum(Units, na.rm = T) - sum(ACTL_STK_QTY, na.rm = T))/count(Lateness == "Late"),
+                  NA)) %>% 
+  mutate("Rem_Units" = ifelse(test = `Rem_Units` > 0, `Rem_Units`, NA)) %>% 
+  mutate("Units" = floor(ifelse(is.na(ACTL_STK_QTY), ifelse(is.na(`Rem_Units`), Units, `Rem_Units`), ACTL_STK_QTY))) %>% 
+  arrange(desc(DEST_PO_ID))
+
+
 # Write out the cleaned master files ----
 write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = '/' ))

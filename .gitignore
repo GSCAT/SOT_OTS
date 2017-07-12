@@ -28,3 +28,4 @@ $RECYCLE.BIN/
 .gitignore
 *.rda
 *.html
+*.csv
