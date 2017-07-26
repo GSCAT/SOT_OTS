@@ -2,8 +2,9 @@ library(dplyr)
 library(readr)
 library(RODBC)
 library(formattable)
+library(rJava)
 #library(RJDBC)
-# Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
+# Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_141")
 library(rChoiceDialogs)
 library(ggvis)
 library(tidyr)
@@ -17,6 +18,10 @@ my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+
+total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+date_check <- sqlQuery(my_connect, query = "select top 1 Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER;")
 
 # Create RJDBC connection - In Dev ----
 #Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
@@ -55,11 +60,11 @@ fis_yr <- prompt_for_year()
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
-SOT_Master <- sqlQuery(my_connect, 
-                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;")
+system.time(SOT_Master <- sqlQuery(my_connect, 
+                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
 
-OTS_Master <- sqlQuery(my_connect, 
-                           query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;")
+system.time(OTS_Master <- sqlQuery(my_connect, 
+                           query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
 
 # OTS_Master <- sqlQuery(my_connect, 
 #                           query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER_TEST;")
