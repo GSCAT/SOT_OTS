@@ -29,3 +29,5 @@ $RECYCLE.BIN/
 *.rda
 *.html
 *.csv
+*.log.*
+*.log
