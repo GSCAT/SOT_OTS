@@ -57,7 +57,7 @@ EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
- load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 system.time(SOT_Master <- sqlQuery(my_connect, 
@@ -113,7 +113,8 @@ OTS_Master <- OTS_Master %>%
         !is.na(DC_NAME),
         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-        !grepl("JPF", DC_NAME, ignore.case = TRUE)) 
+        !grepl("JPF", DC_NAME, ignore.case = TRUE)) %>% 
+  droplevels()
 
 SOT_Master <- SOT_Master %>% 
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
@@ -130,7 +131,8 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          FISCAL_YEAR == fis_yr,
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-         Lateness == "Unmeasured") 
+         Lateness == "Unmeasured") %>% 
+  droplevels()
 
 write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = '/' ))
 
@@ -142,8 +144,8 @@ OTS_Master <- OTS_Master %>%
   mutate("Rem_Units" = 
            ifelse(test = Lateness == "Late", 
                   (sum(Units, na.rm = T) - sum(ACTL_STK_QTY, na.rm = T))/count(Lateness == "Late"),
-                  NA)) %>% 
-  mutate("Rem_Units" = ifelse(test = `Rem_Units` > 0, `Rem_Units`, NA)) %>% 
+                  0)) %>% 
+  mutate("Rem_Units" = ifelse(test = `Rem_Units` > 0, `Rem_Units`, 0)) %>% 
   mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, 
                                 ifelse(is.na(ACTL_STK_QTY), 
                                        ifelse(is.na(`Rem_Units`), ACTL_STK_QTY + `Rem_Units`, 
@@ -155,7 +157,7 @@ OTS_Master <- OTS_Master %>%
 
 # Write out the cleaned master files ----
 write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean.csv', sep = '/' ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = '/' ))
+write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = .Platform$file.sep ))
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
@@ -244,7 +246,7 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OT
 # 7 day Masters
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
-
+#### DON'T RUN Below here
 # Experimental section ----
 # functions for Calculating SOT/OTS
 
