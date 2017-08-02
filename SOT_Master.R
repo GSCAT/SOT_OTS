@@ -57,7 +57,7 @@ EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
-# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 system.time(SOT_Master <- sqlQuery(my_connect, 
@@ -145,12 +145,10 @@ OTS_Master <- OTS_Master %>%
            ifelse(test = Lateness == "Late", 
                   (sum(Units, na.rm = T) - sum(ACTL_STK_QTY, na.rm = T))/count(Lateness == "Late"),
                   0)) %>% 
+  mutate(`ACTL_STK_QTY` = ifelse(is.na(ACTL_STK_QTY), 0, ACTL_STK_QTY)) %>% 
   mutate("Rem_Units" = ifelse(test = `Rem_Units` > 0, `Rem_Units`, 0)) %>% 
   mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, 
-                                ifelse(is.na(ACTL_STK_QTY), 
-                                       ifelse(is.na(`Rem_Units`), ACTL_STK_QTY + `Rem_Units`, 
-                                              `Rem_Units`), 
-                                       (ACTL_STK_QTY + `Rem_Units`))))) %>% 
+                                       (ACTL_STK_QTY + `Rem_Units`)))) %>% 
   # mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, sum(ACTL_STK_QTY)))) %>% 
   arrange(desc(DEST_PO_ID))
 
@@ -158,6 +156,8 @@ OTS_Master <- OTS_Master %>%
 # Write out the cleaned master files ----
 write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = .Platform$file.sep ))
+
+write_csv(OTS_Master, path = 'OTS_Master_clean.csv')
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
@@ -172,7 +172,7 @@ write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_dire
 OTS_by_Category <- OTS_Master %>%
   group_by(ReportingBrand, Category, Month_Number,Week, DC_NAME) %>%
   summarise(TotalUnits= sum(Units), 
-            OnTimeUnits = sum(Units[Lateness=="OnTime"]), 
+            OnTimeUnits = sum(Units[Lateness=="OnTime"], na.rm = T), 
             LateUnits = sum(Units[Lateness=="Late"]), 
             WtDaysLate = sum(Units[Lateness=="Late"] * Days_Late[Lateness=="Late"]),
             DaysLate5 = sum(Units[Days_Late > 5 & Lateness=="Late"]),
