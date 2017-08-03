@@ -57,7 +57,7 @@ EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
-load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 system.time(SOT_Master <- sqlQuery(my_connect, 
@@ -157,7 +157,7 @@ OTS_Master <- OTS_Master %>%
 write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean.csv', sep = '/' ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = .Platform$file.sep ))
 
-write_csv(OTS_Master, path = 'OTS_Master_clean.csv')
+# write_csv(OTS_Master, path = 'OTS_Master_clean.csv')
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
@@ -246,6 +246,12 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OT
 # 7 day Masters
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = '/' ))
+
+#### Save SOT and OTS Master objects to Monthly dir for reporting ----
+dir.create((file.path(SOT_OTS_directory, "Monthly_objects")))
+
+save(SOT_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+save(OTS_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 #### DON'T RUN Below here
 # Experimental section ----
 # functions for Calculating SOT/OTS
