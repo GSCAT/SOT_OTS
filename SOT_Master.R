@@ -23,6 +23,10 @@ total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.V
 total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
 date_check <- sqlQuery(my_connect, query = "select top 1 Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER;")
 
+total_rows_SOT
+total_rows_OTS
+date_check
+
 # Create RJDBC connection - In Dev ----
 #Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
 #Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
