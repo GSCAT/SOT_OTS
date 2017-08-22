@@ -48,13 +48,15 @@ save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep =
 # ----
 # Begin here if SOT_Master was built from the Weekly report ----
 # Import TTP table if necessary i.e. changes made ----
-TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP.xlsx", sheetName = "Sheet1")
 
 library(readxl)
 library(xlsx)
 library(plotly)
 library(tidyr)
 library(mosaic)
+
+# TTP link: https://gapweb.gap.com/gw/content/gweb/en/sites/SupplyChain/Logistics/Logistics_Tools_and_Resources.html >> Supply Chain Master Data >> TTP
+TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP_20170821.xlsx", sheetName = "Sheet1")
 
 dir.create((file.path(SOT_OTS_directory, "Impact_files")))
 
