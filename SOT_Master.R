@@ -246,96 +246,96 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OT
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 
-#### Save SOT and OTS Master objects to Monthly dir for reporting ----
-dir.create((file.path(SOT_OTS_directory, "Monthly_objects")))
-
-save(SOT_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-save(OTS_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
-#### DON'T RUN Below here
-# Experimental section ----
-# functions for Calculating SOT/OTS
-
-OTS_percent <- function(OTUnits, TotalUnits){
-  OTS <- OTUnits/TotalUnits
-  round(OTS*100, digits = 1)
-}
-
-# Tables for Visuals
-
+# #### Save SOT and OTS Master objects to Monthly dir for reporting ----
+# dir.create((file.path(SOT_OTS_directory, "Monthly_objects")))
+# 
+# save(SOT_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+# save(OTS_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+# #### DON'T RUN Below here
+# # Experimental section ----
+# # functions for Calculating SOT/OTS
+# 
+# OTS_percent <- function(OTUnits, TotalUnits){
+#   OTS <- OTUnits/TotalUnits
+#   round(OTS*100, digits = 1)
+# }
+# 
+# # Tables for Visuals
+# 
+# # On_Time_Stock_table <- OTS_Master %>% 
+# #   filter(OTS_Master$Week <= 30) %>%
+# #   summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
+# #             Total_Units_sum=sum(OTS_Master$Units),
+# #             Measurable_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"])) 
+# 
+# OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
+# OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
+# 
 # On_Time_Stock_table <- OTS_Master %>% 
-#   filter(OTS_Master$Week <= 30) %>%
-#   summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
-#             Total_Units_sum=sum(OTS_Master$Units),
-#             Measurable_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"])) 
-
-OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
-OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
-
-On_Time_Stock_table <- OTS_Master %>% 
-  # filter(OTS_Master$Week <= 35) %>%
-  group_by(Parent_Vendor, Month_Number,Week) %>%
-  summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]), 
-            Total_Units_sum=sum(Units),
-            Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) 
-
-OTS_Percent_value <- mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
-On_Time_Stock_table <- as.data.frame(On_Time_Stock_table)
-On_Time_Stock_table <- On_Time_Stock_table %>% mutate("OTS_Percent_value"= OTS_Percent_value)
-
-
-
-
-# Experimental section ----
-On_Time_Stock_table <- OTS_Master %>% 
-  #filter(OTS_Master$Week <= 30) %>%
-  group_by(Parent_Vendor, Month_Number,Week) %>%
-  summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]),
-            Late_Units_sum =sum(Units[Lateness=="Late"]),
-            Total_Units_sum=sum(Units),
-            Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) %>% 
-  mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
-            mutate("OTS_Percent_value"= as.data.frame(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)))
-
-# %>% 
- # mutate_each(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum) )
-
-cbind(On_Time_Stock_table, OTS_Percent_value)
-head(On_Time_Stock_table)
-
-View(OTS_by_Category)
-View(OTS_by_Vendor)
-View(SOT_by_Category)
-View(SOT_by_Vendor)
-
-
-Trans_delay_reason <-  SOT_Master %>% select(ShipCancelWeek, SHP_RSN_TYP_DESC, Units) %>% 
-  filter(SOT_Master$ShipCancelWeek == EOW) %>% 
-  group_by(ShipCancelWeek, SHP_RSN_TYP_DESC) %>% 
-  summarize("Delayed Units" = sum(Units, na.rm = TRUE)) %>% 
-  arrange(desc(`Delayed Units`))
-
-Trans_delay_reason <-  SOT_Master %>% 
-  filter(SOT_Master$ShipCancelWeek == EOW) %>% 
-  select(SHP_RSN_TYP_DESC, Units) %>% 
-  group_by(SHP_RSN_TYP_DESC) %>%  
-  plot(Trans_delay_reason$SHP_RSN_TYP_DESC, Trans_delay_reason$`Delayed Units`)
-
-
-Trans_delay_reason_vis <-  SOT_Master %>%
-  filter(SOT_Master$ShipCancelWeek == EOW) %>% 
-  select(SHP_RSN_TYP_DESC, Units) %>% 
-  group_by(SHP_RSN_TYP_DESC) %>%  
-  ggvis(~SHP_RSN_TYP_DESC, ~`Units`)  guide_axis("y", subdivide = 1, values = seq(0, 2000000, by = 500000))  %>% 
-  add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
-  add_axis("y", title = "")
-Trans_delay_reason_vis
-
-Trans_delay_reason_vis2 <-  SOT_Master %>% 
-  filter(SHP_RSN_TYP_DESC != "-") %>% 
-  select(SHP_RSN_TYP_DESC, Units) %>% 
-  group_by(SHP_RSN_TYP_DESC) %>%  
-  ggvis(~SHP_RSN_TYP_DESC, ~`Units`) %>% 
-  add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
-  add_axis("y", title = "")
-
-Trans_delay_reason_vis2
+#   # filter(OTS_Master$Week <= 35) %>%
+#   group_by(Parent_Vendor, Month_Number,Week) %>%
+#   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]), 
+#             Total_Units_sum=sum(Units),
+#             Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) 
+# 
+# OTS_Percent_value <- mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
+# On_Time_Stock_table <- as.data.frame(On_Time_Stock_table)
+# On_Time_Stock_table <- On_Time_Stock_table %>% mutate("OTS_Percent_value"= OTS_Percent_value)
+# 
+# 
+# 
+# 
+# # Experimental section ----
+# On_Time_Stock_table <- OTS_Master %>% 
+#   #filter(OTS_Master$Week <= 30) %>%
+#   group_by(Parent_Vendor, Month_Number,Week) %>%
+#   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]),
+#             Late_Units_sum =sum(Units[Lateness=="Late"]),
+#             Total_Units_sum=sum(Units),
+#             Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) %>% 
+#   mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
+#             mutate("OTS_Percent_value"= as.data.frame(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)))
+# 
+# # %>% 
+#  # mutate_each(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum) )
+# 
+# cbind(On_Time_Stock_table, OTS_Percent_value)
+# head(On_Time_Stock_table)
+# 
+# View(OTS_by_Category)
+# View(OTS_by_Vendor)
+# View(SOT_by_Category)
+# View(SOT_by_Vendor)
+# 
+# 
+# Trans_delay_reason <-  SOT_Master %>% select(ShipCancelWeek, SHP_RSN_TYP_DESC, Units) %>% 
+#   filter(SOT_Master$ShipCancelWeek == EOW) %>% 
+#   group_by(ShipCancelWeek, SHP_RSN_TYP_DESC) %>% 
+#   summarize("Delayed Units" = sum(Units, na.rm = TRUE)) %>% 
+#   arrange(desc(`Delayed Units`))
+# 
+# Trans_delay_reason <-  SOT_Master %>% 
+#   filter(SOT_Master$ShipCancelWeek == EOW) %>% 
+#   select(SHP_RSN_TYP_DESC, Units) %>% 
+#   group_by(SHP_RSN_TYP_DESC) %>%  
+#   plot(Trans_delay_reason$SHP_RSN_TYP_DESC, Trans_delay_reason$`Delayed Units`)
+# 
+# 
+# Trans_delay_reason_vis <-  SOT_Master %>%
+#   filter(SOT_Master$ShipCancelWeek == EOW) %>% 
+#   select(SHP_RSN_TYP_DESC, Units) %>% 
+#   group_by(SHP_RSN_TYP_DESC) %>%  
+#   ggvis(~SHP_RSN_TYP_DESC, ~`Units`)  guide_axis("y", subdivide = 1, values = seq(0, 2000000, by = 500000))  %>% 
+#   add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
+#   add_axis("y", title = "")
+# Trans_delay_reason_vis
+# 
+# Trans_delay_reason_vis2 <-  SOT_Master %>% 
+#   filter(SHP_RSN_TYP_DESC != "-") %>% 
+#   select(SHP_RSN_TYP_DESC, Units) %>% 
+#   group_by(SHP_RSN_TYP_DESC) %>%  
+#   ggvis(~SHP_RSN_TYP_DESC, ~`Units`) %>% 
+#   add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
+#   add_axis("y", title = "")
+# 
+# Trans_delay_reason_vis2
