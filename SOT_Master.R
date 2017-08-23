@@ -22,11 +22,13 @@ sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
 total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
-date_check <- sqlQuery(my_connect, query = "select top 1 Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER;")
+date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
 total_rows_SOT
 total_rows_OTS
 date_check
+max_stock_date
 
 # Create RJDBC connection - In Dev ----
 #Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
@@ -61,8 +63,8 @@ SOT_OTS_directory <- choose_file_directory()
 EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
- load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
- load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 system.time(SOT_Master <- sqlQuery(my_connect, 
@@ -70,11 +72,6 @@ system.time(SOT_Master <- sqlQuery(my_connect,
 
 system.time(OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
-
-# OTS_Master <- sqlQuery(my_connect, 
-#                           query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER_TEST;")
-
-# save(OTS_Master, file = paste(SOT_OTS_directory,  'OTS_Master_object_TEST.rtf', sep = .Platform$file.sep ))
 
 
 # Close connection ----
