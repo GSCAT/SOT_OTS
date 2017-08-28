@@ -1,3 +1,5 @@
+
+
 library(dplyr)
 library(readr)
 library(RODBC)
@@ -48,6 +50,10 @@ save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep =
 # ----
 # Begin here if SOT_Master was built from the Weekly report ----
 # Import TTP table if necessary i.e. changes made ----
+list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 
 library(readxl)
 library(xlsx)
