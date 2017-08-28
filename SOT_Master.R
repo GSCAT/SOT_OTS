@@ -1,9 +1,10 @@
+# Install missing packages ----
 list.of.packages <- c("dplyr", "readr", "RODBC", "formattable", 
-                      "rJava", "rJava", "rChoiceDialogs", "ggvis", "tidyr", "mosaic")
+                      "rJava", "rChoiceDialogs", "ggvis", "tidyr", "mosaic")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
-
+# Install libraries ----
 library(dplyr)
 library(readr)
 library(RODBC)
@@ -16,6 +17,7 @@ library(ggvis)
 library(tidyr)
 library(mosaic)
 
+# Clean environment ----
 rm(list = ls())
 
 my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
