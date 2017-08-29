@@ -1,6 +1,7 @@
 # Install missing packages ----
 list.of.packages <- c("dplyr", "readr", "RODBC", "formattable", 
-                      "rJava", "rChoiceDialogs", "ggvis", "tidyr", "mosaic")
+                      "rJava", "rChoiceDialogs", "ggvis", "tidyr", 
+                      "mosaic", "yaml")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -16,36 +17,10 @@ library(rChoiceDialogs)
 library(ggvis)
 library(tidyr)
 library(mosaic)
+library(yaml)
 
 # Clean environment ----
 rm(list = ls())
-
-my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
-my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
-
-# Create RODBC connection ----
-my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
-# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
-
-total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
-total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
-date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
-max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
-
-total_rows_SOT
-total_rows_OTS
-date_check
-max_stock_date
-
-# Create RJDBC connection - In Dev ----
-#Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
-#Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
-# drv2 <- JDBC("com.teradata.jdbc.TeraConnectionPoolDataSource", "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\terajdbc4.jar;C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\tdgssconfig.jar")
-# conn <- dbConnect(drv2, "jdbc:teradata://tdprodcop1.gap.com", my_uid, my_pwd)
-# SOT_Master_RJDBC <- dbGetQuery(conn, 
-#                       query = "SELECT  * from dbc.dbcinfo;")
-
 
 # Setup Environment Variables/Functions ----
 prompt_for_week <- function()
@@ -70,6 +45,36 @@ SOT_OTS_directory <- choose_file_directory()
 
 EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
+
+path <- Sys.getenv("USERPROFILE")
+credentials <- yaml.load_file(paste(path, "Documents", "credentials.yml", sep = .Platform$file.sep))
+
+# my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
+# my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
+
+# Create RODBC connection ----
+my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
+# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+
+total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
+
+total_rows_SOT
+total_rows_OTS
+date_check
+max_stock_date
+
+# Create RJDBC connection - In Dev ----
+#Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
+#Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
+# drv2 <- JDBC("com.teradata.jdbc.TeraConnectionPoolDataSource", "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\terajdbc4.jar;C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\tdgssconfig.jar")
+# conn <- dbConnect(drv2, "jdbc:teradata://tdprodcop1.gap.com", my_uid, my_pwd)
+# SOT_Master_RJDBC <- dbGetQuery(conn, 
+#                       query = "SELECT  * from dbc.dbcinfo;")
+
 
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
