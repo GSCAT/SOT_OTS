@@ -1,5 +1,3 @@
-
-
 library(dplyr)
 library(readr)
 library(RODBC)
@@ -33,23 +31,15 @@ SOT_OTS_directory <- choose_file_directory()
 EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
-
-my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
-my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
-
-
-
-# Create RODBC connection 
-my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
+# Create RODBC connection ----
+my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 
 save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-# ----
-# ----
-# Begin here if SOT_Master was built from the Weekly report ----
-# Import TTP table if necessary i.e. changes made ----
+
+# Install any missing packages 
 list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
