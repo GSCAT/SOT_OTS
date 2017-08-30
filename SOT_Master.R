@@ -46,8 +46,11 @@ SOT_OTS_directory <- choose_file_directory()
 EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
-path <- Sys.getenv("USERPROFILE")
-credentials <- yaml.load_file(paste(path, "Documents", "credentials.yml", sep = .Platform$file.sep))
+# For username and password ----
+if(!"path" %in% ls()){
+  path <- Sys.getenv("USERPROFILE")
+  credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
+}
 
 # my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
 # my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
