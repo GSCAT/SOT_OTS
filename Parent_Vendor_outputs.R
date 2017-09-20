@@ -55,3 +55,4 @@ Trans_output_Vendor_YTD[is.na(Trans_output_Vendor_YTD)] <- "-"
 
 write_csv(Trans_output_Vendor, paste(SOT_OTS_directory, "Impact_files", "Trans_output_Vendor.csv", sep = .Platform$file.sep))
 write_csv(Trans_output_Vendor_YTD, paste(SOT_OTS_directory,"Impact_files", "Trans_output_Vendor_YTD.csv", sep = .Platform$file.sep))
+

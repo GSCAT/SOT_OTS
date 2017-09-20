@@ -1,7 +1,7 @@
 # Install missing packages ----
 list.of.packages <- c("dplyr", "readr", "RODBC", "formattable", 
                       "rJava", "rChoiceDialogs", "ggvis", "tidyr", 
-                      "mosaic", "yaml")
+                      "colorspace",  "mosaic", "yaml")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -16,6 +16,7 @@ library(rJava)
 library(rChoiceDialogs)
 library(ggvis)
 library(tidyr)
+library(colorspace)
 library(mosaic)
 library(yaml)
 
@@ -79,8 +80,8 @@ max_stock_date
 #                       query = "SELECT  * from dbc.dbcinfo;")
 
 
-# load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
-# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+ load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
+ load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 system.time(SOT_Master <- sqlQuery(my_connect, 
@@ -119,7 +120,18 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "RAW_Files",  'OTS_Master_
 # Save Raw objects ----
 save(SOT_Master, file = paste(SOT_OTS_directory, "RAW_Objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 save(OTS_Master, file = paste(SOT_OTS_directory, "RAW_Objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+ 
+# Save Unmeasured subset ----
+SOT_Master_Unmeasured <- SOT_Master %>% 
+  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
+  filter(ShipCancelWeek <= EOW,
+         FISCAL_YEAR == fis_yr,
+         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
+         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
+         Lateness == "Unmeasured") %>% 
+  droplevels()
 
+write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep ))
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
@@ -140,21 +152,11 @@ SOT_Master <- SOT_Master %>%
          MetricShipDate <= SOT_Data_Pulled) %>% 
   droplevels()
 
-SOT_Master_Unmeasured <- SOT_Master %>% 
-  filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
-  filter(ShipCancelWeek <= EOW,
-         FISCAL_YEAR == fis_yr,
-         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
-         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
-         Lateness == "Unmeasured") %>% 
-  droplevels()
-
-write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep ))
 
 ########## FIX UNITS in OTS_MASTER #############
 OTS_Master <- OTS_Master %>% 
   # filter(`Week` >= 21) %>% 
-  group_by(DEST_PO_ID) %>% 
+  group_by(`DEST_PO_ID` ) %>% 
   mutate("Old Units" = Units) %>% 
   mutate("Rem_Units" = 
            ifelse(test = Lateness == "Late", 
@@ -163,7 +165,7 @@ OTS_Master <- OTS_Master %>%
   mutate(`ACTL_STK_QTY` = ifelse(is.na(ACTL_STK_QTY), 0, ACTL_STK_QTY)) %>% 
   mutate("Rem_Units" = ifelse(test = `Rem_Units` > 0, `Rem_Units`, 0)) %>% 
   mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, 
-                                       (ACTL_STK_QTY + `Rem_Units`)))) %>% 
+                                       (ACTL_STK_QTY + `Rem_Units` + 0)))) %>% 
   # mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, sum(ACTL_STK_QTY)))) %>% 
   arrange(desc(DEST_PO_ID))
 
@@ -262,11 +264,12 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OT
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 
-# #### Save SOT and OTS Master objects to Monthly dir for reporting ----
-# dir.create((file.path(SOT_OTS_directory, "Monthly_objects")))
-# 
-# save(SOT_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-# save(OTS_Master, file = paste(SOT_OTS_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+#### Save SOT and OTS Master objects to Monthly dir for reporting ----
+Monthly_directory <- choose_file_directory()
+dir.create((file.path(Monthly_directory, "Monthly_objects")))
+
+save(SOT_Master, file = paste(Monthly_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+save(OTS_Master, file = paste(Monthly_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 # #### DON'T RUN Below here
 # # Experimental section ----
 # # functions for Calculating SOT/OTS

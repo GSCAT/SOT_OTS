@@ -31,6 +31,12 @@ SOT_OTS_directory <- choose_file_directory()
 EOW <- prompt_for_week()
 fis_yr <- prompt_for_year()
 
+# For username and password ----
+if(!"path" %in% ls()){
+  path <- Sys.getenv("USERPROFILE")
+  credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
+}
+
 # Create RODBC connection ----
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
