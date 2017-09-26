@@ -131,6 +131,7 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          Lateness == "Unmeasured") %>% 
   droplevels()
 
+save(SOT_Master_Unmeasured, file = paste(SOT_OTS_directory, "RAW_Objects",  'SOT_Master_Unmeasured_object.rtf', sep = .Platform$file.sep))
 write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep ))
 
 # Scrub Noise from Master Objects ----
