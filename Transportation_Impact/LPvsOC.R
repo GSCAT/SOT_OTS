@@ -219,6 +219,8 @@ write_csv(Trans_output_Category_YTD, paste(SOT_OTS_directory, "Impact_files", "T
 write_csv(Trans_output_GapInc_YTD, paste(SOT_OTS_directory, "Impact_files", "Trans_output_GapInc_YTD.csv", sep = .Platform$file.sep))
 
 
+Unidentified_RC <- SOT_Master_FOB %>% filter(ShipCancelWeek == EOW, Lateness == "Late", `Probable Failure` == "Not Tested")
+
 # Parking Lot - Don't run ----
 # Convert difftime to integer 
 SOT_Master_FOB$`Planned OC (Derived)` <- as.integer(SOT_Master_FOB$`Planned OC (Derived)`)

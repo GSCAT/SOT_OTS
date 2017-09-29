@@ -11,6 +11,8 @@ brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR I
 BMC_table <- read_csv("https://github.gapinc.com/raw/SRAA/Static_tables/master/BMC.csv")
 logistics_reason <- read_csv("https://github.gapinc.com/raw/SRAA/Static_tables/master/Logistics_reason_map.csv")
 
+dir.create((file.path(SOT_OTS_directory, "Impact_files/OTS_Impact")))
+
 OTP_Logistics_sub <- OTP_Logistics %>% 
   select(Destination.PO.DPO.NBR, "Logistics_Impact"= `INDC.2`) %>% 
   # filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>%
@@ -23,10 +25,23 @@ OTS_Master_Logistics_Impact <- OTS_Master %>%
   left_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Destination.PO.DPO.NBR")) %>% 
   left_join(logistics_reason, by = c("Logistics_Impact" = "Logistics_Impact"))
 
+# by_logistics_reason <- OTS_Master_Logistics_Impact %>%
+#   filter(Week == EOW, Lateness == "OnTime", Logistics_Impact != "OT") %>% 
+#   group_by(Logistics_Impact, OTS) 
+#   #summarise("Units" = sum(Units))
+  
+# write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = "\\"))
+
+# write_csv(OTS_by_brand, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "something.csv", sep = .Platform$file.sep))
+write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = .Platform$file.sep))
+  
+View(by_logistics_reason)
+
 test <- OTS_Master_Logistics_Impact %>%   
   filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>% 
   group_by(`ReportingBrand`, `Week`) %>% 
   summarise(sum(Units))
+
 View(OTS_Master_Logistics_Impact %>%   filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>% group_by(`ReportingBrand`, `Week`) %>% summarise(sum(Units)))
 # 
 # OTS_by_brand <- OTS_Master_Logistics_Impact %>% 
@@ -42,6 +57,7 @@ View(OTS_Master_Logistics_Impact %>%   filter(grepl("Vendor", Logistics_Impact, 
 #             #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>% 
 #   right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec"))
 
+##### by Brand
 OTS_by_brand <- OTS_Master_Logistics_Impact %>% 
   filter(Week == EOW) %>% 
   group_by(ReportingBrand) %>% 
@@ -64,8 +80,28 @@ OTS_by_brand <- OTS_Master_Logistics_Impact %>%
 #   group_by(ReportingBrand) %>%
 #   summarise("Units" = sum(`Units`))
 
-  
-write_csv(OTS_by_brand, paste(SOT_OTS_directory, "OTS_by_brand.csv", sep = .Platform$file.sep))
+write_csv(OTS_by_brand, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_brand.csv", sep = .Platform$file.sep))
+
+##### by brand 2
+
+OTS_by_brand2 <- OTS_Master_Logistics_Impact %>% 
+  filter(Week == EOW) %>% 
+  group_by(ReportingBrand) %>% 
+  summarise("OTS %" = sum(subset(Units, Lateness == "OnTime"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Brand RD/Hold" = sum(subset(Units, grepl("Brand", OTS, ignore.case = TRUE) ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Vendor" = sum(subset(Units, OTS == "Vendor" ), na.rm = T)/ sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Origin" = sum(subset(Units, OTS == "Origin"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Weather" = sum(subset(Units, OTS == "Extreme Weather" ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Destination" = sum(subset(Units, OTS == "Destination" ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "DC Congestion" = sum(subset(Units, OTS == "OT" & Lateness == "Late" ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Other" = sum(subset(Units, OTS %in% c("Other", NA)), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T)) %>% 
+  #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
+  right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
+  mutate("Total" = rowSums(.[2:9])) %>% 
+  mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
+  select(c(1, 2, 11, 3:10))
+
+write_csv(OTS_by_brand2, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_brand2.csv", sep = .Platform$file.sep))
 
 OTS_by_category <- OTS_Master_Logistics_Impact %>% 
   filter(Week == EOW) %>% 
@@ -84,7 +120,7 @@ OTS_by_category <- OTS_Master_Logistics_Impact %>%
   mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
   select(c(1, 2, 11, 3:10))
 
-write_csv(OTS_by_category, paste(SOT_OTS_directory, "OTS_by_category.csv", sep = .Platform$file.sep))
+write_csv(OTS_by_category, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_category.csv", sep = .Platform$file.sep))
 
 
 OTS_by_GapInc <- OTS_Master_Logistics_Impact %>% 
@@ -98,15 +134,21 @@ OTS_by_GapInc <- OTS_Master_Logistics_Impact %>%
             "Weather" = sum(subset(Units, OTS == "Extreme Weather" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Destination" = sum(subset(Units, OTS == "Destination" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "DC Congestion" = sum(subset(Units, OTS == "OT" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
-            "Other" = sum(subset(Units, OTS %in% c("Other", NA) & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T)) %>% 
+            "Other" = sum(subset(Units, OTS %in% c("Other", NA) & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T), 
+            "Vendor_prime" = sum(subset(Units, OTS == "Vendor"), na.rm = T)/ sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Logistics makeup" = `Vendor_prime` - `Vendor`,
+            "Units" = sum(Units)) %>% 
   #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
   # right_join(as.data.frame(cat_vec), by = c("Category" = "cat_vec")) %>% 
   mutate("Total" = rowSums(.[1:8])) %>% 
   mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
   mutate("Entity" = "Gap Inc") %>% 
-  select(c(11, 1, 10, 2:9))
+  select(c(Entity, `Units`, `OTS %`, 
+           `OTS Variance from Target`, `Brand RD/Hold`, `Vendor`, 
+           `Origin`, `Weather`, `Destination`, `DC Congestion`, 
+           `Other`, `Total`, `Logistics makeup`))
 
-
+write_csv(OTS_by_GapInc, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_GapInc.csv", sep = .Platform$file.sep))
 ###### DC's
 
 DC_vec <- c("BDC", "CFC", "CAO", "GUK", "EFC", "WFC", 
@@ -135,7 +177,7 @@ OTS_by_DC <- OTS_Master_Logistics_Impact %>%
            `Origin`, `Weather`, `Destination`, `DC Congestion`, 
            `Other`, `Total`))
 
-write_csv(OTS_by_DC, paste(SOT_OTS_directory, "OTS_by_DC.csv", sep = .Platform$file.sep))
+write_csv(OTS_by_DC, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_DC.csv", sep = .Platform$file.sep))
 
 
 ####### Vendor
@@ -175,7 +217,7 @@ OTS_by_parent_vendor <- OTS_Master_Logistics_Impact %>%
 
 OTS_by_parent_vendor[is.na(OTS_by_parent_vendor)] <- "-"
 
-write_csv(OTS_by_parent_vendor, paste(SOT_OTS_directory, "OTS_by_parent_vendor.csv", sep = .Platform$file.sep))
+write_csv(OTS_by_parent_vendor, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_parent_vendor.csv", sep = .Platform$file.sep))
 
 
 
@@ -204,7 +246,7 @@ OTS_by_transfer_point <- OTS_Master_Logistics_Impact %>%
            `Other`, `Total`)) %>% 
   arrange(desc(Units))
 
-write_csv(OTS_by_transfer_point, paste(SOT_OTS_directory, "OTS_by_transfer_point.csv", sep = .Platform$file.sep))
+write_csv(OTS_by_transfer_point, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_transfer_point.csv", sep = .Platform$file.sep))
 
 
 ##### Origin Country
@@ -232,7 +274,9 @@ OTS_by_origin_country <- OTS_Master_Logistics_Impact %>%
            `Other`, `Total`)) %>% 
   arrange(desc(Units))
 
-write_csv(OTS_by_origin_country, paste(SOT_OTS_directory, "OTS_by_origin_country.csv", sep = .Platform$file.sep))
+write_csv(OTS_by_origin_country, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_origin_country.csv", sep = .Platform$file.sep))
+
+##### Parking lot ----
 
 
 edge_cases <- OTS_Master_Logistics_Impact %>% filter(Week == EOW, Lateness == "Late", is.na(OTS))

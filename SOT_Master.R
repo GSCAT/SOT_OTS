@@ -11,8 +11,6 @@ library(readr)
 library(RODBC)
 library(formattable)
 library(rJava)
-#library(RJDBC)
-# Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_141")
 library(rChoiceDialogs)
 library(ggvis)
 library(tidyr)
@@ -20,41 +18,21 @@ library(colorspace)
 library(mosaic)
 library(yaml)
 
-# Clean environment ----
+# Start with clean environment ----
 rm(list = ls())
 
-# Setup Environment Variables/Functions ----
-prompt_for_week <- function()
-{ 
-  n <- readline(prompt="Enter Week number: ")
-  return(as.integer(n))
+# create functions and prompt for environment variables ----
+SOT_set_env <- function(){
+  source("prompts.R")
 }
 
-prompt_for_year <- function()
-{ 
-  n <- readline(prompt="Enter Fiscal Year as YYYY: ")
-  return(as.integer(n))
-}
-
-choose_file_directory <- function()
-{
-  v <- jchoose.dir()
-  return(v)
-}
-
-SOT_OTS_directory <- choose_file_directory()
-
-EOW <- prompt_for_week()
-fis_yr <- prompt_for_year()
+# Type SOT_set_env() in the Console after running the above code ----
 
 # For username and password ----
 if(!"credentials" %in% ls()){
   path <- Sys.getenv("USERPROFILE")
   credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
 }
-
-# my_uid <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_uid.txt")
-# my_pwd <- read_lines("C:\\Users\\Ke2l8b1\\Documents\\my_pwd.txt")
 
 # Create RODBC connection ----
 my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
@@ -71,17 +49,10 @@ total_rows_OTS
 date_check
 max_stock_date
 
-# Create RJDBC connection - In Dev ----
-#Sys.setenv(JAVA_HOME= "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\jre-8u101-windows-x64.exe")
-#Sys.setenv(JAVA_HOME= "C:\\Program Files (x86)\\Java\\jre1.8.0_131")
-# drv2 <- JDBC("com.teradata.jdbc.TeraConnectionPoolDataSource", "C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\terajdbc4.jar;C:\\Users\\Ke2l8b1\\Documents\\Teradata\\JDBC_Driver\\tdgssconfig.jar")
-# conn <- dbConnect(drv2, "jdbc:teradata://tdprodcop1.gap.com", my_uid, my_pwd)
-# SOT_Master_RJDBC <- dbGetQuery(conn, 
-#                       query = "SELECT  * from dbc.dbcinfo;")
-
-
- load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
- load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+## Run below load statements if restoring from a previously saved object stored in the working directory. 
+## Skip to "Create Master Objects" if pulling fresh data ----
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Create Master Objects ----
 system.time(SOT_Master <- sqlQuery(my_connect, 
@@ -89,7 +60,6 @@ system.time(SOT_Master <- sqlQuery(my_connect,
 
 system.time(OTS_Master <- sqlQuery(my_connect, 
                            query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
-
 
 # Close connection ----
 close(my_connect)
@@ -167,7 +137,6 @@ OTS_Master <- OTS_Master %>%
   mutate("Rem_Units" = ifelse(test = `Rem_Units` > 0, `Rem_Units`, 0)) %>% 
   mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, 
                                        (ACTL_STK_QTY + `Rem_Units` + 0)))) %>% 
-  # mutate("Units" = floor(ifelse(Lateness == "OnTime", ACTL_STK_QTY, sum(ACTL_STK_QTY)))) %>% 
   arrange(desc(DEST_PO_ID))
 
 
@@ -175,7 +144,6 @@ OTS_Master <- OTS_Master %>%
 write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean.csv', sep = .Platform$file.sep ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean.csv', sep = .Platform$file.sep ))
 
-# write_csv(OTS_Master, path = 'OTS_Master_clean.csv')
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
@@ -265,97 +233,10 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OT
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 
-#### Save SOT and OTS Master objects to Monthly dir for reporting ----
-Monthly_directory <- choose_file_directory()
-dir.create((file.path(Monthly_directory, "Monthly_objects")))
+# #### Save SOT and OTS Master objects to Monthly dir for reporting ----
+# Monthly_directory <- choose_file_directory()
+# dir.create((file.path(Monthly_directory, "Monthly_objects")))
+# 
+# save(SOT_Master, file = paste(Monthly_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+# save(OTS_Master, file = paste(Monthly_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
-save(SOT_Master, file = paste(Monthly_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-save(OTS_Master, file = paste(Monthly_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
-# #### DON'T RUN Below here
-# # Experimental section ----
-# # functions for Calculating SOT/OTS
-# 
-# OTS_percent <- function(OTUnits, TotalUnits){
-#   OTS <- OTUnits/TotalUnits
-#   round(OTS*100, digits = 1)
-# }
-# 
-# # Tables for Visuals
-# 
-# # On_Time_Stock_table <- OTS_Master %>% 
-# #   filter(OTS_Master$Week <= 30) %>%
-# #   summarise(OnTime_Units_sum =sum(OTS_Master$Units[OTS_Master$Lateness=="OnTime"]), 
-# #             Total_Units_sum=sum(OTS_Master$Units),
-# #             Measurable_Units_sum=sum(OTS_Master$Units[OTS_Master$Lateness!= "Unmeasurable"])) 
-# 
-# OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
-# OTS_percent(On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Total_Units_sum)
-# 
-# On_Time_Stock_table <- OTS_Master %>% 
-#   # filter(OTS_Master$Week <= 35) %>%
-#   group_by(Parent_Vendor, Month_Number,Week) %>%
-#   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]), 
-#             Total_Units_sum=sum(Units),
-#             Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) 
-# 
-# OTS_Percent_value <- mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
-# On_Time_Stock_table <- as.data.frame(On_Time_Stock_table)
-# On_Time_Stock_table <- On_Time_Stock_table %>% mutate("OTS_Percent_value"= OTS_Percent_value)
-# 
-# 
-# 
-# 
-# # Experimental section ----
-# On_Time_Stock_table <- OTS_Master %>% 
-#   #filter(OTS_Master$Week <= 30) %>%
-#   group_by(Parent_Vendor, Month_Number,Week) %>%
-#   summarise(OnTime_Units_sum =sum(Units[Lateness=="OnTime"]),
-#             Late_Units_sum =sum(Units[Lateness=="Late"]),
-#             Total_Units_sum=sum(Units),
-#             Measurable_Units_sum=sum(Units[Lateness!= "Unmeasurable"])) %>% 
-#   mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)
-#             mutate("OTS_Percent_value"= as.data.frame(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum)))
-# 
-# # %>% 
-#  # mutate_each(mapply(OTS_percent, On_Time_Stock_table$OnTime_Units_sum, On_Time_Stock_table$Measurable_Units_sum) )
-# 
-# cbind(On_Time_Stock_table, OTS_Percent_value)
-# head(On_Time_Stock_table)
-# 
-# View(OTS_by_Category)
-# View(OTS_by_Vendor)
-# View(SOT_by_Category)
-# View(SOT_by_Vendor)
-# 
-# 
-# Trans_delay_reason <-  SOT_Master %>% select(ShipCancelWeek, SHP_RSN_TYP_DESC, Units) %>% 
-#   filter(SOT_Master$ShipCancelWeek == EOW) %>% 
-#   group_by(ShipCancelWeek, SHP_RSN_TYP_DESC) %>% 
-#   summarize("Delayed Units" = sum(Units, na.rm = TRUE)) %>% 
-#   arrange(desc(`Delayed Units`))
-# 
-# Trans_delay_reason <-  SOT_Master %>% 
-#   filter(SOT_Master$ShipCancelWeek == EOW) %>% 
-#   select(SHP_RSN_TYP_DESC, Units) %>% 
-#   group_by(SHP_RSN_TYP_DESC) %>%  
-#   plot(Trans_delay_reason$SHP_RSN_TYP_DESC, Trans_delay_reason$`Delayed Units`)
-# 
-# 
-# Trans_delay_reason_vis <-  SOT_Master %>%
-#   filter(SOT_Master$ShipCancelWeek == EOW) %>% 
-#   select(SHP_RSN_TYP_DESC, Units) %>% 
-#   group_by(SHP_RSN_TYP_DESC) %>%  
-#   ggvis(~SHP_RSN_TYP_DESC, ~`Units`)  guide_axis("y", subdivide = 1, values = seq(0, 2000000, by = 500000))  %>% 
-#   add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
-#   add_axis("y", title = "")
-# Trans_delay_reason_vis
-# 
-# Trans_delay_reason_vis2 <-  SOT_Master %>% 
-#   filter(SHP_RSN_TYP_DESC != "-") %>% 
-#   select(SHP_RSN_TYP_DESC, Units) %>% 
-#   group_by(SHP_RSN_TYP_DESC) %>%  
-#   ggvis(~SHP_RSN_TYP_DESC, ~`Units`) %>% 
-#   add_axis("x", title = "", properties = axis_props(labels = list(angle = 45, align = "left", fontSize = 9))) %>% 
-#   add_axis("y", title = "")
-# 
-# Trans_delay_reason_vis2
