@@ -20,6 +20,8 @@ Unmeasured_by_brand <- SOT_Master_Unmeasured %>%
   summarise("Unmeasured_Units" = floor(sum(`Units`, na.rm = T))) %>% 
   right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec"))
 
+Unmeasured_EOW <- SOT_Master_Unmeasured %>% filter(ShipCancelWeek == EOW) %>% group_by(ShipCancelWeek) %>% summarise(sum(Units))
+
 formattable(Unmeasured_by_brand, list(Unmeasured_Units = color_bar("lightblue")))
 
 Unmeasured_by_Category <- SOT_Master_Unmeasured %>% 
