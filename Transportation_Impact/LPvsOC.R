@@ -1,49 +1,33 @@
-library(dplyr)
-library(readr)
-library(RODBC)
-library(formattable)
-library(rChoiceDialogs)
-library(ggvis)
-
-# Only Run this first section if the weekly SOT_Master is insufficient
-# i.e. Only necessary if starting from scratch
-# Setup Environment Variables/Functions ----
-prompt_for_week <- function()
-{ 
-  n <- readline(prompt="Enter Week number: ")
-  return(as.integer(n))
-}
-
-prompt_for_year <- function()
-{ 
-  n <- readline(prompt="Enter Fiscal Year as YYYY: ")
-  return(as.integer(n))
-}
-
-choose_file_directory <- function()
-{
-  v <- jchoose.dir()
-  return(v)
-}
-
-SOT_OTS_directory <- choose_file_directory()
-
-EOW <- prompt_for_week()
-fis_yr <- prompt_for_year()
-
-# For username and password ----
-if(!"path" %in% ls()){
-  path <- Sys.getenv("USERPROFILE")
-  credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
-}
-
-# Create RODBC connection ----
-my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
-# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
-
-
-save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+# library(dplyr)
+# library(readr)
+# library(RODBC)
+# library(formattable)
+# library(rChoiceDialogs)
+# library(ggvis)
+#
+# # Only Run this first section if the weekly SOT_Master is insufficient
+# # i.e. Only necessary if starting from scratch
+# # Setup Environment Variables/Functions ----
+# # create functions and prompt for environment variables ----
+# SOT_set_env <- function(){
+#   source("prompts.R")
+# }
+# 
+# # Type SOT_set_env() in the Console after running the above code ----
+# 
+# # For username and password ----
+# if(!"credentials" %in% ls()){
+#   path <- Sys.getenv("USERPROFILE")
+#   credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
+# }
+# 
+# # Create RODBC connection ----
+# my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
+# # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+# sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+# 
+# 
+# save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
 # Install any missing packages 
 list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic")
@@ -58,9 +42,13 @@ library(tidyr)
 library(mosaic)
 
 # TTP link: https://gapweb.gap.com/gw/content/gweb/en/sites/SupplyChain/Logistics/Logistics_Tools_and_Resources.html >> Supply Chain Master Data >> TTP
-TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP_20170821.xlsx", sheetName = "Sheet1")
+# TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP_20170821.xlsx", sheetName = "Sheet1")
 
-dir.create((file.path(SOT_OTS_directory, "Impact_files")))
+ttp_file <- grep("TTP", list.files(paste(getwd(), "Transportation_Impact", sep = .Platform$file.sep)), value = TRUE)[1]
+paste("Reading in : ", ttp_file)
+TTP_table <- read.csv(paste(SOT_OTS_directory, ttp_file, sep = .Platform$file.sep))
+
+if(!dir.exists(file.path(SOT_OTS_directory, "Impact_files"))) {dir.create(file.path(SOT_OTS_directory, "Impact_files"))}
 
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
