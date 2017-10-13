@@ -15,6 +15,7 @@ SOT/OTS Weekly Process
     -   [Parent\_vendor\_Output.R](#parent_vendor_output.r)
     -   [SOT Impact PDF](#sot-impact-pdf)
     -   [Create PDF for Leadership group - Wednesday email](#create-pdf-for-leadership-group---wednesday-email)
+-   [Thursday Steps](#thursday-steps)
     -   [Create PDF for Thursday Publish](#create-pdf-for-thursday-publish)
     -   [Copy Files to Box](#copy-files-to-box)
     -   [Send Emails](#send-emails)
@@ -38,9 +39,10 @@ SOT/OTS Weekly Process
 
 #### Set up GIT so you can run the SOT OTS Project from R Studio
 
--   Run CMD Stuff or install GITHUB
--   Save the repository to a folder on your computer
--   Get access from Kevin
+-   Fork or Clone GitHub repository <https://github.gapinc.com/SRAA/SOTC_OTS_Weekly>
+    -   All files are in the above repo
+    -   Create project with the above repo
+-   Ask Kevin or Vineela for help if needed
 
 #### Create Yaml File for Credential Handling
 
@@ -152,6 +154,8 @@ The two scripts described above write csv files to a folder called "Impact\_file
 
 -   Save PDF of the following tab
     -   SOT Impact Tab -&gt; SOTC Impact adhoc Wk \#\#.pdf
+
+### Thursday Steps
 
 #### Create PDF for Thursday Publish
 
