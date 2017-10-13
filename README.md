@@ -1,34 +1,251 @@
 SOT/OTS Weekly Process
 ================
 
--   [Set up Environment](#set-up-environment)
--   [Pulling Data](#pulling-data)
--   [Check the date of Data Refresh in EDW](#check-the-date-of-data-refresh-in-edw)
--   [Generate Metadata](#generate-metadata)
--   [Save Binary Objects](#save-binary-objects)
--   [Clean-up Unwanted Records](#clean-up-unwanted-records)
--   [Summary Statistics](#summary-statistics)
--   [Building the Output Tables](#building-the-output-tables)
--   [Output Files](#output-files)
+-   [Initial Steps to Setup (First time)](#initial-steps-to-setup-first-time)
+    -   [Set up GIT so you can run the SOT OTS Project from R Studio](#set-up-git-so-you-can-run-the-sot-ots-project-from-r-studio)
+    -   [Create Yaml File for Credential Handling](#create-yaml-file-for-credential-handling)
+    -   [Set up ODBC for Teradata](#set-up-odbc-for-teradata)
+-   [WEEKLY PROCESS STARTS HERE - WEDNESDAY](#weekly-process-starts-here---wednesday)
+    -   [Open Teradata](#open-teradata)
+    -   [Open R Studio from your local Git Repository](#open-r-studio-from-your-local-git-repository)
+    -   [Open SOT\_Master.R script](#open-sot_master.r-script)
+    -   [Excel File](#excel-file)
+    -   [Copying Data to Excel](#copying-data-to-excel)
+    -   [LPvsOC.R](#lpvsoc.r)
+    -   [Parent\_vendor\_Output.R](#parent_vendor_output.r)
+    -   [SOT Impact PDF](#sot-impact-pdf)
+    -   [Create PDF for Leadership group - Wednesday email](#create-pdf-for-leadership-group---wednesday-email)
+    -   [Create PDF for Thursday Publish](#create-pdf-for-thursday-publish)
+    -   [Copy Files to Box](#copy-files-to-box)
+    -   [Send Emails](#send-emails)
+-   [Appendix](#appendix)
+    -   [SOT\_Master.R](#sot_master.r)
+        -   [Set up Environment](#set-up-environment)
+        -   [Pulling Data](#pulling-data)
+        -   [Check the date of Data Refresh in EDW](#check-the-date-of-data-refresh-in-edw)
+        -   [Generate Metadata](#generate-metadata)
+        -   [Save Binary Objects](#save-binary-objects)
+        -   [Clean-up Unwanted Records](#clean-up-unwanted-records)
+        -   [Summary Statistics](#summary-statistics)
+        -   [Building the Output Tables](#building-the-output-tables)
+        -   [Output Files](#output-files)
+    -   [LPvsOC.R](#lpvsoc.r-1)
+        -   [Read in Latest TTP file](#read-in-latest-ttp-file)
+
+### Initial Steps to Setup (First time)
+
+------------------------------------------------------------------------
+
+#### Set up GIT so you can run the SOT OTS Project from R Studio
+
+-   Run CMD Stuff or install GITHUB
+-   Save the repository to a folder on your computer
+-   Get access from Kevin
+
+#### Create Yaml File for Credential Handling
+
+-   Text file (.yml) on desk top with this information
+    -   my\_uid: "your ID"
+    -   my\_pwd: "your Password"
+
+#### Set up ODBC for Teradata
+
+1.  Go to control panel &gt; Data Sources(ODBC)
+2.  Click Add button
+3.  click on Teradata click finish
+4.  Add this information to this field, enter user name and PW click ok.
+    -   ODBC - IP EDWP
+    -   Description : Teradata
+    -   Name or IP Address: 10.107.56.31
+    -   Mechanism: LDAP
+
+### WEEKLY PROCESS STARTS HERE - WEDNESDAY
+
+------------------------------------------------------------------------
+
+We need to run code in Teradata before doing anything in R Studio. This is to drop and recreate a fresh table from which to pull data from.
+
+#### Open Teradata
+
+1.  From GITHUB for Gap enterprise <https://github.gapinc.com/SRAA>
+2.  Go to SRAA/EDW\_IUF folder
+3.  Copy code called SRAA\_SAND EDW\_IUF\_YTD Prod.sql
+4.  Paste into Teradata after loggin in
+5.  Run code and close teradata
+
+#### Open R Studio from your local Git Repository
+
+From R Studio we run 3 .R scripts. These scripts contain all the code needed to output the csv files we need to generate.
+
+1.  Click on SOT OTS R Project button
+
+##### List of Files to Run
+
+-   *SOT\_Master.R*
+-   *LPvsOC.R*
+-   *Parent\_Vendor\_outputs.R*
+
+#### Open SOT\_Master.R script
+
+###### From R Studio - open SOT\_Master.R script
+
+1.  Run the first part of the code until the comment row "\# Type SOT\_set\_env() in the Console after running the above code ----"
+2.  Type SOT\_set\_env() in the console
+3.  Dialog box opens - create folder for where you want to dump the data files - click open
+4.  Next Enter the previous week \# in the console - enter
+5.  Enter the Year \# - enter
+6.  Run the rest of the code - takes about an hour.
+
+#### Excel File
+
+##### Copy a version of the excel report file to the folder just created in R (the one to which you navigated in the previous step)
+
+1.  File name similar to "On Time % Metric Report xxx.xx.xx (FS xx Week xx YTD) w OTS\_Impact
+2.  Rename x's to this week
+
+#### Copying Data to Excel
+
+Next we copy paste data from the csv files (created in R) into the excel
+
+1.  Open On Time % report
+2.  Go to Master Tab
+3.  Delete all data (from row 11 down)from the Summary sections of this report
+    -   OTS by Category Summary
+    -   OTS by Vendor Summary
+    -   SOT by Category Summary
+    -   SOT by Vendor Summary
+
+4.  In the Folder we created their are four excel files that were created that we will paste to the area that we just deleted
+    -   OTS by Category Summary -&gt; OTS\_by\_Category
+    -   OTS by Vendor Summary -&gt; OTS\_by\_Vendor
+    -   SOT by Category Summary -&gt; SOT\_by\_Category
+    -   SOT by Vendor Summary -&gt; SOT\_by\_Vendor
+    -   On the Master tab click the Refresh Pivot Tables button - a macro that refreshes all pivots
+    -   Change Week \# (previous week number) and date as of \# (todays date)
+
+#### LPvsOC.R
+
+From R Studio - open LPvsOC.R script
+
+1.  Run script - I run one line at a line to make sure each line runs
+
+#### Parent\_vendor\_Output.R
+
+From R Studio - open Parent\_vendor\_Output.R
+
+1.  Run script - I run one line at a line to make sure each line runs
+
+#### SOT Impact PDF
+
+The two scripts described above write csv files to a folder called "Impact\_files" in the saved directory. These data needto be copied to the report in the "SOT Impact" tab in Excel. This is a copy paste excercise. The files that say YTD are copied to the right side of the report, the non YTD are the week files, so they go on the left.
+
+-   Trans Output - Rows 12 to 21
+-   Trans Output Category - Rows 23 - 30
+-   Trans Output Vendor - rows 42 down
+-   Trans output Gap Inc - row 10
+-   Align columns that you are copying
+    -   For category sections, make sure you get the right columns
+    -   Category column is not copied over
+-   Now that everything is updated - do a sanity check between the **SOT-OTS Brand & Category** tab in this report to make sure the %s match, etc.
+
+#### Create PDF for Leadership group - Wednesday email
+
+-   Save PDF of the following tab
+    -   SOT Impact Tab -&gt; SOTC Impact adhoc Wk \#\#.pdf
+
+#### Create PDF for Thursday Publish
+
+-   Create PDFs by saving the following tabs
+    -   SOT-OTS Brand & Category Exec -&gt; SOTC Executive Summary Wk \#\#.pdf
+    -   SOT-OTS Brand & Category Trend -&gt; SOTC Trend Summary Wk \#\#.pdf
+    -   Green and Orange tabs - SOTC Appendix Wk \#\#.pdf
+
+#### Copy Files to Box
+
+Copy these three files to box for sharing purposes
+
+1.  Box Location: SOT OTS files
+2.  Files copied
+    -   SOT\_Master\_Unmeasured\_Wk\#\#\_YTD
+    -   OTS\_Master\_clean
+    -   SOT\_Master\_clean
+
+3.  Box Location: Lateness Impact Raw Data
+    -   SOT\_Master\_Impact\_adhoc.csv
+
+#### Send Emails
+
+-   The Impact adhoc is sent out to a small distro on Wednesdays with some notes
+-   The rest are sent out on Thursdays to 2 distros
+
+*E-mail notes*:
+
+-   Thursday e-mail to large group
+    -   SOT Summary and OTS Summary \#s - comes from our excel report
+    -   Vendor lateness impact - comes from Global tranpsoration weekly update file. Vendor delay line report sent by Brandon Purdy
+    -   Transporation Performance - comes from e-mail from Tim Hemmert or Brandon Purdy
+    -   DC Performance - comes from e-mail from Rick Ollman
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+Appendix
+--------
+
+Below is detail code in each file
+
+### SOT\_Master.R
 
 ``` r
 library(dplyr)
 library(readr)
 library(RODBC)
 library(formattable)
-library(RJDBC)
+library(rJava)
 library(rChoiceDialogs)
+library(ggvis)
+library(tidyr)
+library(colorspace)
+library(mosaic)
+library(yaml)
 ```
 
-After loading the required libraries, create a connection to EDWP using the *RODBC* library. Once you have stored your username and password as ***my\_uid*** and ***my\_pwd*** ; and created a DSN, connect with a string similar to this (You may need to change the below if you gave your DSN an different name). Then verify that we have successfully connected by performing a query on the dbcinfo table.
+After loading the required libraries, create a connection to EDWP using the *RODBC* library. Once you have stored your username and password as ***my\_uid*** and ***my\_pwd*** in a file named ***credentials.yml*** on your Desktop. You will also need to create a DSN, in order to connect with the database. Then verify that we have successfully connected by performing a query on the dbcinfo table.
 
 <br>
 
 #### Set up Environment
 
+After insuring that we are starting from a clean environment,and added a few functions, type ***SOT\_set\_env()*** in the console.
+
+``` r
+SOT_set_env()
+```
+
+You will be prompted to enter the paramaters to be stored as environment variables and used in the following code. First you should see a file chooser like so: <br>
+
+![](https://github.com/kwbonds/SOT_OTS/blob/master/Markdown/choose_file_directory.PNG) <br> Navigate to the directory where you want to store this weeks master data and files and choose open. This will store the path as a string.
+
+Now enter the week for which you are reporting. This will prompt you at the console.
+
+<br>
+
+Now create a connection to pull in the data from EDW. Be sure to represh the EDW table if necessary. First read in the *credentials.yml* file.
+
+``` r
+# For username and password ----
+if(!"credentials" %in% ls()){
+  path <- Sys.getenv("USERPROFILE")
+  credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
+}
+```
+
+and test that you have connected.
+
 ``` r
 # Create RODBC connection ----
-my_connect <- odbcConnect(dsn= "IP EDWP", uid= my_uid, pwd= my_pwd)
+my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 ```
@@ -38,44 +255,40 @@ sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
     ## 2               RELEASE 14.10.07.09
     ## 3 LANGUAGE SUPPORT MODE    Standard
 
-<br>
-
-Now we need to create a few functions and store a few constants for later use.
+<br> Now that we have a connection, let's store a few variables for QA later on.
 
 ``` r
-# Setup Environment Variables/Functions----
-prompt_for_week <- function()
-{ 
-  n <- readline(prompt="Enter Week number: ")
-  return(as.integer(n))
-}
+total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
-choose_file_directory <- function()
-{
-  v <- jchoose.dir()
-  return(v)
-}
+total_rows_SOT
 ```
 
-<br>
-
-We want to store our directory path as a string. The easiest way to do this is by opening a Java based file chooser (sometimes this has to be ran twice. It intermittently fails the first time). The code below will store a path to a directory of your choice.
+    ##   Count(*)
+    ## 1  1181886
 
 ``` r
-SOT_OTS_directory <- choose_file_directory()
+total_rows_OTS
 ```
 
-<br>
-
-![](C:\Users\Ke2l8b1\Documents\R\SOT%20OTS\choose_file_directory.png) <br>
-
-Now enter the week for which you are reporting. This will prompt you at the console.
+    ##   Count(*)
+    ## 1  1181886
 
 ``` r
-EOW <- prompt_for_week()
+date_check
 ```
 
-<br>
+    ##   Data_Pulled
+    ## 1  2017-10-11
+
+``` r
+max_stock_date
+```
+
+    ##   max_stocked_date
+    ## 1       2017-10-11
 
 #### Pulling Data
 
@@ -104,7 +317,17 @@ close(my_connect)
 ``` r
 SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
 OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
+
+SOT_Data_Pulled
 ```
+
+    ## [1] "2017-10-04"
+
+``` r
+OTS_Data_Pulled
+```
+
+    ## [1] "2017-10-04"
 
 <br>
 
@@ -358,3 +581,60 @@ write_csv(subset(OTS_Master, Week == EOW), path = paste(
   paste('OTS_Master_WK', EOW, '.csv', sep = ""),
   sep = '/'))
 ```
+
+### LPvsOC.R
+
+You will need to install a few more packages.
+
+``` r
+# Install any missing packages 
+list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+
+library(readxl)
+library(xlsx)
+```
+
+    ## Loading required package: xlsxjars
+
+``` r
+library(plotly)
+```
+
+    ## 
+    ## Attaching package: 'plotly'
+
+    ## The following object is masked from 'package:mosaic':
+    ## 
+    ##     do
+
+    ## The following object is masked from 'package:ggplot2':
+    ## 
+    ##     last_plot
+
+    ## The following objects are masked from 'package:ggvis':
+    ## 
+    ##     add_data, hide_legend
+
+    ## The following object is masked from 'package:formattable':
+    ## 
+    ##     style
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     filter
+
+    ## The following object is masked from 'package:graphics':
+    ## 
+    ##     layout
+
+``` r
+library(tidyr)
+library(mosaic)
+```
+
+#### Read in Latest TTP file
+
+The TTP file should be updated quarterly. A csv should be saved in ***~/Transportation\_Impact*** directory

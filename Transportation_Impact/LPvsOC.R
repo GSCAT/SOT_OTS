@@ -46,7 +46,7 @@ library(mosaic)
 
 ttp_file <- grep("TTP", list.files(paste(getwd(), "Transportation_Impact", sep = .Platform$file.sep)), value = TRUE)[1]
 paste("Reading in : ", ttp_file)
-TTP_table <- read.csv(paste(SOT_OTS_directory, ttp_file, sep = .Platform$file.sep))
+TTP_table <- read.xlsx(paste(getwd(), "Transportation_Impact", ttp_file, sep = .Platform$file.sep), sheetIndex = 1)
 
 if(!dir.exists(file.path(SOT_OTS_directory, "Impact_files"))) {dir.create(file.path(SOT_OTS_directory, "Impact_files"))}
 
