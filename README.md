@@ -38,9 +38,10 @@ SOT/OTS Weekly Process
 
 #### Set up GIT so you can run the SOT OTS Project from R Studio
 
--   Run CMD Stuff or install GITHUB
--   Save the repository to a folder on your computer
--   Get access from Kevin
+-   Fork or Clone GitHub repository <https://github.gapinc.com/SRAA/SOTC_OTS_Weekly>
+    -   All files are in the above repo
+    -   Create project with the above repo
+-   Ask Kevin or Vineela for help if needed
 
 #### Create Yaml File for Credential Handling
 
