@@ -158,6 +158,15 @@ Trans_output_GapInc <- SOT_Master_FOB %>%
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
   select(`SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
+Trans_Units_for_commentary <- SOT_Master_FOB %>% 
+  filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  summarise("Transportation_Delay_Units" = floor(sum(subset(Units, `Probable Failure` == "Transportation"))),
+            "Vendor_Air_Delay_Units" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )),
+            "Vendor_nonair_Delay_Units" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))
+Trans_Units_for_commentary
+
+write_csv(Trans_Units_for_commentary, paste(SOT_OTS_directory, "Impact_files",  "Trans_Units_for_commentary.csv", sep = .Platform$file.sep))           
+
 
 Trans_output_YTD <- SOT_Master_FOB %>%
   filter(FISCAL_YEAR == fis_yr,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>%
