@@ -176,7 +176,10 @@ Copy these three files to box for sharing purposes
 
 3.  Box Location: Lateness Impact Raw Data
     -   SOT\_Master\_Impact\_adhoc.csv
-
+    
+#### Copy to FTP site
+- Copy SOT_Master_clean.csv and OTS_Master_clean.csv to:
+[ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/OTS_SOT%20Raw%20Data/](ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/OTS_SOT%20Raw%20Data/)
 #### Send Emails
 
 -   The Impact adhoc is sent out to a small distro on Wednesdays with some notes
