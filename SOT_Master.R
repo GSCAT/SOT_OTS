@@ -17,6 +17,7 @@ library(tidyr)
 library(colorspace)
 library(mosaic)
 library(yaml)
+library(lubridate)
 
 # Start with clean environment ----
 rm(list = ls())
@@ -49,17 +50,39 @@ total_rows_OTS
 date_check
 max_stock_date
 
+
+
+if(date_check[[1]] == Sys.Date()) {
+  test_exists = 1
+  paste("Latest refresh is ", date_check[[1]], "Proceding to query")
+  # Create Master Objects ----
+  system.time(SOT_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+
+  system.time(OTS_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+} else if (readline("Data is old. Would you like to continue? Y or N: ") == 'Y') {
+  test_exists = 1
+  paste("Latest refresh is", Sys.Date() - date_check[[1]], "days old. Continuing anyway")
+  # Create Master Objects ----
+  system.time(SOT_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+
+  system.time(OTS_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+  
+} else {
+  test_exists = 0
+  paste("Aborting")
+}
+
 ## Run below load statements if restoring from a previously saved object stored in the working directory. 
 ## Skip to "Create Master Objects" if pulling fresh data ----
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
-# Create Master Objects ----
-system.time(SOT_Master <- sqlQuery(my_connect, 
-                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
-
-system.time(OTS_Master <- sqlQuery(my_connect, 
-                           query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+if ( test_exists == 1){
+  paste("Data has been pulled")
 
 # Close connection ----
 close(my_connect)
@@ -232,7 +255,7 @@ write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OT
 # 7 day Masters
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
-
+}
 # #### Save SOT and OTS Master objects to Monthly dir for reporting ----
 # Monthly_directory <- choose_file_directory()
 # dir.create((file.path(Monthly_directory, "Monthly_objects")))
