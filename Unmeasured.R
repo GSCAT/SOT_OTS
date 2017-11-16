@@ -41,7 +41,7 @@ d <- SOT_Master_Unmeasured %>%
   theme_classic() +
   #scale_fill_stata()
   scale_fill_tableau("colorblind10") +
-  scale_x_continuous(breaks = seq(0, 33, 2)) + 
+  scale_x_continuous(breaks = seq(0, EOW, 2)) + 
   scale_y_continuous(labels = scales::comma, breaks = seq(0, 10000000, 200000)) +
   theme(axis.text.x = element_text(angle = 90)) +
   ggtitle("Unmeasured Units for Gap Inc", subtitle = paste("(by Fiscal Week and Brand through Week ", "31", ")", sep = "") )
