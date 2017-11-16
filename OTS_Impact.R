@@ -35,7 +35,7 @@ OTS_Master_Logistics_Impact <- OTS_Master %>%
 # write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = "\\"))
 
 # write_csv(OTS_by_brand, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "something.csv", sep = .Platform$file.sep))
-write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = .Platform$file.sep))
+# write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = .Platform$file.sep))
   
 # View(by_logistics_reason)
 
