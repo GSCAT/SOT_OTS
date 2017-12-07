@@ -30,7 +30,7 @@
 # save(SOT_Master, file = paste(SOT_OTS_directory,  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 
 # Install any missing packages 
-list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic")
+list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic", "devtools")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -40,6 +40,11 @@ library(xlsx)
 library(plotly)
 library(tidyr)
 library(mosaic)
+library(devtools)
+devtools::install_github("tidyverse/magrittr")
+library(magrittr)
+library(dplyr)
+library(readr)
 
 # TTP link: https://gapweb.gap.com/gw/content/gweb/en/sites/SupplyChain/Logistics/Logistics_Tools_and_Resources.html >> Supply Chain Master Data >> TTP
 # TTP_table <- read.xlsx(file= "Transportation_Impact\\TTP_20170821.xlsx", sheetName = "Sheet1")
@@ -112,7 +117,26 @@ SOT_Master_FOB$`Test by OC` <- as.factor(SOT_Master_FOB$`Test by OC`)
 SOT_Master_FOB$XFR_Point_Place <- as.factor(SOT_Master_FOB$XFR_Point_Place)
 SOT_Master_FOB$`Sub Reason` <- as.factor(SOT_Master_FOB$`Sub Reason`)
 
-write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], path = paste(SOT_OTS_directory, "Impact_files", "SOT_MASTER_Impact_adhoc.csv", sep = "\\"))
+# write_csv(SOT_Master_FOB[, c(1:5, 9, 12:15, 17:38, 40:42, 39, 43, 7, 6, 8, 16, 10:11, 44:45, 46:49)], 
+#           path = paste(SOT_OTS_directory, "Impact_files", "SOT_MASTER_Impact_adhoc.csv", sep = "\\"))
+
+SOT_Master_FOB %>% select(`NUMBER_SEQ`, `DEST_PO_ID`, `ReportingBrand`, `Category`, 
+                          `Parent_Vendor`, `MetricShipDate`, `StockedDate`, `CountryOfOrigin`, 
+                          `Lateness`, `ShipCancelMonth`, `DAYS_LATE`, `Vendor_Rank`, `Fiscal_Month`, 
+                          `Quarter`, `FISCAL_YEAR`, `DC_GEO_LOC`, `MasterVendorID`, `AGT_DEPT_ID`, 
+                          `AGENT_DEPT`, `OPR_BRD_STY_ID`, `Category_Source`, `SALES_TERMS_CODE`,
+                          `SHIP_MODE_CD`, `ShipDateChoice`, `Trade_Lane_Type`, `ProgramType`, 
+                          `BUYING_AGENT_GROUP`, `XFR_PT_COUNTRY_CODE`, `XFR_PT_PLACE_CODE`, 
+                          `XFR_Point_Place`, `LOC_ABBR_NM`, `PROMPT_COUNTRY_ORIGIN`, 
+                          `SHP_MODE_CATG_NM`, `Data_Pulled`, `Days.Before.Ship.Cancel`, 
+                          `Planned OC (Derived)`, `SHP_RSN_TYP_DESC`, `Days Late to OC`, 
+                          `SHIP_CANCEL_DATE`, `Contract_Ship_Cancel`, `Units`, `ShipCancelWeek`, 
+                          `ACTUAL_ORIGIN_CONSOL_LCL_DATE`, `ACTUAL_LP_LCL_DATE`, `Days Anticipated vs Contract`, 
+                          `LP vs Anticipated`, `Probable Failure`, `Sub Reason`, `Test by OC`, `Match?`) %T>%
+  write_csv(path = paste(SOT_OTS_directory, "Impact_files", "SOT_MASTER_Impact_adhoc.csv", sep = "\\")) %>% 
+  filter(ShipCancelWeek == EOW) %>% 
+  write_csv(path = paste(SOT_OTS_directory, "Impact_files", paste("SOT_MASTER_Impact_adhoc_wk_", EOW, ".csv", sep = ""), sep = "\\"))
+
 
 save(SOT_Master_FOB, file = paste(SOT_OTS_directory, "Impact_files",  'SOT_Master_FOB.rda', sep = .Platform$file.sep))
 
