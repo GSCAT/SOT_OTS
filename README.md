@@ -86,6 +86,9 @@ From R Studio we run 3 .R scripts. These scripts contain all the code needed to 
 -   *SOT\_Master.R*
 -   *LPvsOC.R*
 -   *Parent\_Vendor\_outputs.R*
+-   *Unmeasured.R*
+-   *OTS\_Impact.R*
+
 
 #### Open SOT\_Master.R script
 
@@ -127,7 +130,7 @@ Next we copy paste data from the csv files (created in R) into the excel
 
 #### LPvsOC.R
 
-From R Studio - open LPvsOC.R script
+From R Studio - open LPvsOC.R script (Transportation_Impact folder)
 
 1.  Run script - I run one line at a line to make sure each line runs
 
@@ -137,9 +140,15 @@ From R Studio - open Parent\_vendor\_Output.R
 
 1.  Run script - I run one line at a line to make sure each line runs
 
+#### Unmeasured.R
+
+From R Studio - open Unmeasured.R
+
+1.  Run script - I run one line at a line to make sure each line runs
+
 #### SOT Impact PDF
 
-The two scripts described above write csv files to a folder called "Impact\_files" in the saved directory. These data needto be copied to the report in the "SOT Impact" tab in Excel. This is a copy paste excercise. The files that say YTD are copied to the right side of the report, the non YTD are the week files, so they go on the left.
+The two scripts described above write csv files to a folder called "Impact\_files" in the saved directory. These data need to be copied to the report in the "SOT Impact" tab in Excel. This is a copy paste excercise. The files that say YTD are copied to the right side of the report, the non YTD are the week files, so they go on the left.
 
 -   Trans Output - Rows 12 to 21
 -   Trans Output Category - Rows 23 - 30
@@ -150,10 +159,28 @@ The two scripts described above write csv files to a folder called "Impact\_file
     -   Category column is not copied over
 -   Now that everything is updated - do a sanity check between the **SOT-OTS Brand & Category** tab in this report to make sure the %s match, etc.
 
+#### OTS\_Impact.R
+
+From R Studio - open OTS\_Impact.R
+
+1.  Download the newest Weekly Dashboard from: https://gapinc.app.box.com/folder/26906947114. Save as CSV file.
+2.  Run script 
+
+#### OTS Impact PDF
+
+The OTS\_Impact script write csv files to a folder called "OTS\_Impact" under the "Impact\_files" folder. Similar to creating the SOT Impact PDF, these data need to be copied to the "OTS Impact" tab in Excel.
+
+-   OTS_by_GapInc - Row 11
+-   OTS_by_brand - Row 13 - 22
+-   OTS_by_category - Row 24 - 31
+-   OTS_by_DC - Row 45 - 61
+-   Now that everything is updated - do a sanity check between the **SOT-OTS Brand & Category** tab in this report to make sure the %s match, etc.
+
 #### Create PDF for Leadership group - Wednesday email
 
 -   Save PDF of the following tab
-    -   SOT Impact Tab -&gt; SOTC Impact adhoc Wk \#\#.pdf
+    -   SOT Impact Tab -&gt; SOTC Impact Wk \#\#.pdf
+    -   OTS Impact Tab -&gt; OTS Impact Wk \#\#.pdf
 
 ### Thursday Steps
 
