@@ -1,15 +1,11 @@
 ---
-title: "JDBC/ODBC Comparison"
-author: "Wendy Lu"
-date: "December 6, 2017"
-output: html_document
+title: "JDBC Comparison"
+author: "Wendy L."
+date: "December 11, 2017"
+output: pdf_document
 ---
 
 This is an exercise to validate the results of EDW data extract using JDBC. We compared the Week 44 SOTC OTS results using both ODBC and JDBC methods. The objective is to make sure JDBC extraction generates the same results as ODBC so we can adopt JDBC method in the future as it's faster and more efficient. 
-
-```{r include=FALSE}
-setwd("~/SOTC OTS/JDBC comparison")
-```
 
 ## Load libraries and saved objects
 ```{r}
