@@ -62,5 +62,5 @@ dbDisconnect(conn)
 save(SOT_Master, file = "SOT_Master_wk44.rds")
 save(SOT_Master_JDBC, file = "SOT_Master_JDBC_wk44.rds")
 save(OTS_Master, file = "OTS_Master_wk44.rds")
-save(SOT_Master_JDBC, file = "OTS_Master_JDBC_wk44.rds")
+save(OTS_Master_JDBC, file = "OTS_Master_JDBC_wk44.rds")
 

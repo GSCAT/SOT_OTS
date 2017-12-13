@@ -1,7 +1,7 @@
 # Install missing packages ----
 list.of.packages <- c("dplyr", "readr", "RODBC", "formattable", 
                       "rJava", "rChoiceDialogs", "ggvis", "tidyr", 
-                      "colorspace",  "mosaic", "yaml")
+                      "colorspace",  "mosaic", "yaml", "RJDBC", "DBI")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -18,9 +18,11 @@ library(colorspace)
 library(mosaic)
 library(yaml)
 library(lubridate)
+library(RJDBC)
+library(DBI)
 
 # Start with clean environment ----
-rm(list = ls())
+# rm(list = ls())
 
 # create functions and prompt for environment variables ----
 SOT_set_env <- function(){
@@ -35,15 +37,57 @@ if(!"credentials" %in% ls()){
   credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
 }
 
-# Create RODBC connection ----
-my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
-# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+# # Create RODBC connection ----
+# my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
+# # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 
-total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
-total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
-date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
-max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
+# sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+drv=JDBC("com.teradata.jdbc.TeraDriver","C:\\TeraJDBC__indep_indep.16.10.00.05\\terajdbc4.jar;C:\\TeraJDBC__indep_indep.16.10.00.05\\tdgssconfig.jar")
+conn=dbConnect(drv,"jdbc:teradata://10.107.56.31/LOGMECH=LDAP",credentials$my_uid, credentials$my_pwd)
+dbGetQuery(conn, statement = "SELECT  * from dbc.dbcinfo;")
+gc() # Garbage collection (BASE)
+
+jdbc_fetch <- dbSendQuery(conn, "SELECT * FROM SRAA_SAND.VIEW_SOT_MASTER")
+
+chunk <-  dbFetch(jdbc_fetch, 1)
+length <- dbGetQuery(conn, "Select count(*) from SRAA_SAND.VIEW_SOT_MASTER")
+system.time(while (!nrow(chunk) >= length) {
+  chunk <- rbind(chunk, dbFetch(jdbc_fetch, 100000))
+  gc()
+  print(nrow(chunk))
+})
+
+SOT_Master <- chunk
+rm(chunk)
+dbClearResult(jdbc_fetch)
+gc()
+
+jdbc_fetch <- dbSendQuery(conn, "SELECT * FROM SRAA_SAND.VIEW_OTS_MASTER")
+
+chunk <-  dbFetch(jdbc_fetch, 1)
+length <- dbGetQuery(conn, "Select count(*) from SRAA_SAND.VIEW_OTS_MASTER")
+system.time(while (!nrow(chunk) >= length) {
+  chunk <- rbind(chunk, dbFetch(jdbc_fetch, 100000))
+  gc()
+  print(nrow(chunk))
+})
+
+OTS_Master <- chunk
+rm(chunk)
+dbClearResult(jdbc_fetch)
+gc()
+
+
+total_rows_SOT <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+total_rows_OTS <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+date_check <- dbGetQuery(conn, statement = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+max_stock_date <-  dbGetQuery(conn, statement = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
+
+dbDisconnect(conn)
+# total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+# total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+# date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+# max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
 total_rows_SOT
 total_rows_OTS
@@ -51,30 +95,29 @@ date_check
 max_stock_date
 
 
-
-if(date_check[[1]] == Sys.Date()) {
-  test_exists = 1
-  paste("Latest refresh is ", date_check[[1]], "Proceding to query")
-  # Create Master Objects ----
-  system.time(SOT_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
-
-  system.time(OTS_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
-} else if (readline("Data is old. Would you like to continue? Y or N: ") == 'Y') {
-  test_exists = 1
-  paste("Latest refresh is", Sys.Date() - date_check[[1]], "days old. Continuing anyway")
-  # Create Master Objects ----
-  system.time(SOT_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
-
-  system.time(OTS_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
-  
-} else {
-  test_exists = 0
-  paste("Aborting")
-}
+# if(date_check[[1]] == Sys.Date()) {
+#   test_exists = 1
+#   paste("Latest refresh is ", date_check[[1]], "Proceding to query")
+#   # Create Master Objects ----
+#   system.time(SOT_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+# 
+#   system.time(OTS_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+# } else if (readline("Data is old. Would you like to continue? Y or N: ") == 'Y') {
+#   test_exists = 1
+#   paste("Latest refresh is", Sys.Date() - date_check[[1]], "days old. Continuing anyway")
+#   # Create Master Objects ----
+#   system.time(SOT_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+# 
+#   system.time(OTS_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+#   
+# } else {
+#   test_exists = 0
+#   paste("Aborting")
+# }
 
 ## Run below load statements if restoring from a previously saved object stored in the working directory. 
 ## Skip to "Create Master Objects" if pulling fresh data ----
@@ -82,7 +125,7 @@ if(date_check[[1]] == Sys.Date()) {
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
 
 # Close connection ----
-close(my_connect)
+# close(my_connect)
 
 # if ( test_exists == 1){
 #   paste("Data has been pulled")
