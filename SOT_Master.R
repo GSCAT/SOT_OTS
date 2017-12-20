@@ -37,9 +37,9 @@ if(!"credentials" %in% ls()){
   credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
 }
 
-# # Create RODBC connection ----
+# Create RODBC connection ----
 # my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
-# # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 
 # sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 drv=JDBC("com.teradata.jdbc.TeraDriver","C:\\TeraJDBC__indep_indep.16.10.00.05\\terajdbc4.jar;C:\\TeraJDBC__indep_indep.16.10.00.05\\tdgssconfig.jar")
@@ -84,6 +84,15 @@ date_check <- dbGetQuery(conn, statement = "select Data_Pulled from SRAA_SAND.VI
 max_stock_date <-  dbGetQuery(conn, statement = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
 dbDisconnect(conn)
+# Convert Dates and factors ----
+SOT_Master[, c(6:7, 9:12, 41:43)] <- SOT_Master[, c(6:7, 9:12, 41:43)] %>% mutate_all(funs(as.Date(.)))
+SOT_Master <- SOT_Master %>%
+mutate_all(funs(if(is.character(.)) as.factor(.) else .))
+
+OTS_Master[, c(7:11, 30:31, 33:34)] <- OTS_Master[, c(7:11, 30:31, 33:34)] %>% mutate_all(funs(as.Date(.)))
+# OTS_Master <- OTS_Master %>%
+#   mutate_all(funs(if(is.character(.)) as.factor(.) else .))
+
 # total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
 # total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
 # date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
@@ -130,6 +139,9 @@ max_stock_date
 # if ( test_exists == 1){
 #   paste("Data has been pulled")
 
+#  system.time(SOT_Master_ODBC <- sqlQuery(my_connect,
+#                                    query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER sample 2000;"))
+
 SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
 OTS_Data_Pulled <- OTS_Master$Data_Pulled[1]
 # Check date
@@ -167,8 +179,12 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          Lateness == "Unmeasured") %>% 
   droplevels()
 
-save(SOT_Master_Unmeasured, file = paste(SOT_OTS_directory, "RAW_Objects",  'SOT_Master_Unmeasured_object.rtf', sep = .Platform$file.sep))
-write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep ))
+save(SOT_Master_Unmeasured, file = paste(SOT_OTS_directory, 
+                                         "RAW_Objects",  'SOT_Master_Unmeasured_object.rtf', 
+                                         sep = .Platform$file.sep))
+write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  
+                                              paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), 
+                                              sep = .Platform$file.sep ))
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
@@ -218,8 +234,10 @@ OTS_Master %>% filter(Week == EOW) %>% write_csv( path = paste(SOT_OTS_directory
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
 OTS_Master_Summary_curr_week <- OTS_Master %>% filter(Week ==EOW) %>% summary() %>% as.data.frame() 
 
-write_csv(as.data.frame(SOT_Master_Summary_curr_week), path = paste(SOT_OTS_directory, "Summary_Files",  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
-write_csv(as.data.frame(OTS_Master_Summary_curr_week), path = paste(SOT_OTS_directory, "Summary_Files",  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
+write_csv(as.data.frame(SOT_Master_Summary_curr_week), 
+          path = paste(SOT_OTS_directory, "Summary_Files",  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
+write_csv(as.data.frame(OTS_Master_Summary_curr_week), 
+          path = paste(SOT_OTS_directory, "Summary_Files",  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
 
 # Create Output Tables ----
 
