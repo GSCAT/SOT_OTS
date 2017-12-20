@@ -1,0 +1,131 @@
+---
+title: "JDBC Comparison"
+author: "Wendy L."
+date: "December 11, 2017"
+output: pdf_document
+---
+
+This is an exercise to validate the results of EDW data extract using JDBC. We compared the Week 44 SOTC OTS results using both ODBC and JDBC methods. The objective is to make sure JDBC extraction generates the same results as ODBC so we can adopt JDBC method in the future as it's faster and more efficient. 
+
+## Load libraries and saved objects
+```{r}
+suppressMessages(library(ggplot2))
+suppressMessages(library(dplyr))
+suppressMessages(library(scales))
+
+load("OTS_Master_JDBC_wk44.rds")
+load("OTS_Master_object.rds")
+load("SOT_Master_JDBC_wk44.rds")
+load("SOT_Master_object.rds")
+```
+
+## SOT_Master
+###1.Compare dimensions of the two SOT_Master dfs
+```{r}
+dim(SOT_Master)
+dim(SOT_Master_JDBC)
+```
+###2. Compare summary statistics of the numeric attributes
+```{r}
+summary(SOT_Master[c('Units','DAYS_LATE')])
+summary(SOT_Master_JDBC[c('Units','DAYS_LATE')])
+```
+
+###3.Compare aggregated SOT results by brand by category
+```{r}
+SOT_Master_JDBC$ReportingBrand <- as.factor(SOT_Master_JDBC$ReportingBrand)
+SOT_Master_JDBC$Category <- as.factor(SOT_Master_JDBC$Category)
+SOTbyBrandODBC <- SOT_Master %>% 
+  group_by(ReportingBrand, Category) %>%
+  summarise(n = n(), sumUnits <- sum(Units)) %>%
+  arrange(n)
+SOTbyBrandODBC
+SOTbyBrandJDBC <- SOT_Master_JDBC %>% 
+  group_by(ReportingBrand, Category) %>%
+  summarise(n = n(), sumUnits <- sum(Units)) %>%
+  arrange(n)
+SOTbyBrandJDBC
+```
+
+Are the aggregated results from ODBC and JDBC the same?
+```{r}
+all.equal(SOTbyBrandODBC, SOTbyBrandJDBC)
+```
+
+###4.Compare ship cancel date distribution
+The two histograms show the same Ship Cancel Date distribution between the two dfs.
+```{r}
+SOT_Master_JDBC$SHIP_CANCEL_DATE <- as.Date(SOT_Master_JDBC$SHIP_CANCEL_DATE)
+
+ggplot(SOT_Master, aes(x = SHIP_CANCEL_DATE, fill=ReportingBrand)) +
+  geom_histogram(binwidth = 15) +
+  scale_x_date(labels = date_format("%Y-%b"),
+               breaks = seq(min(SOT_Master$SHIP_CANCEL_DATE)-5, max(SOT_Master$SHIP_CANCEL_DATE)+5, 30)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  ggtitle("SOT (ODBC) Ship Cancel Date Distribution")
+
+ggplot(SOT_Master_JDBC, aes(x = SHIP_CANCEL_DATE, fill=ReportingBrand)) +
+  geom_histogram(binwidth = 15) +
+  scale_x_date(labels = date_format("%Y-%b"),
+               breaks = seq(min(SOT_Master_JDBC$SHIP_CANCEL_DATE)-5, max(SOT_Master_JDBC$SHIP_CANCEL_DATE)+5, 30)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  ggtitle("SOT (JDBC) Ship Cancel Date Distribution")
+```
+
+
+## OTS_Master
+###1.Compare dimensions of the two SOT_Master dfs
+```{r}
+dim(OTS_Master)
+dim(OTS_Master_JDBC)
+```
+
+###2. Compare summary statistics of the numeric attributes
+```{r}
+summary(OTS_Master[c('Units','FCST_QTY','ACTL_STK_QTY','Days_Late')])
+summary(OTS_Master_JDBC[c('Units','FCST_QTY','ACTL_STK_QTY','Days_Late')])
+```
+
+###3.Compare aggregated results by brand by category
+```{r}
+OTS_Master_JDBC$ReportingBrand <- as.factor(OTS_Master_JDBC$ReportingBrand)
+OTS_Master_JDBC$Category <- as.factor(OTS_Master_JDBC$Category)
+
+OTSbyBrandODBC <- OTS_Master %>% 
+  group_by(ReportingBrand, Category) %>%
+  summarise(n = n(), sumUnits <- sum(Units)) %>%
+  arrange(n)
+OTSbyBrandODBC
+
+OTSbyBrandJDBC <- OTS_Master_JDBC %>% 
+  group_by(ReportingBrand, Category) %>%
+  summarise(n = n(), sumUnits <- sum(Units)) %>%
+  arrange(n)
+OTSbyBrandJDBC
+```
+
+Are the aggregated results from ODBC and JDBC the same?
+```{r}
+all.equal(OTSbyBrandODBC, OTSbyBrandJDBC)
+```
+
+###4.Compare planned stocked date distribution
+The two histograms show the same Planned Stocked Date distribution between the two dfs.
+```{r}
+OTS_Master_JDBC$PLANNED_STOCKED_DATE <- as.Date(OTS_Master_JDBC$PLANNED_STOCKED_DATE)
+
+ggplot(OTS_Master, aes(x = PLANNED_STOCKED_DATE, fill=ReportingBrand)) +
+  geom_histogram(binwidth = 15) +
+  scale_x_date(labels = date_format("%Y-%b"),
+               breaks = seq(min(OTS_Master$PLANNED_STOCKED_DATE)-5, max(OTS_Master$PLANNED_STOCKED_DATE)+5, 30)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  ggtitle("OTS (ODBC) Planned Stocked Date Distribution")
+
+ggplot(OTS_Master_JDBC, aes(x = PLANNED_STOCKED_DATE, fill=ReportingBrand)) +
+  geom_histogram(binwidth = 15) +
+  scale_x_date(labels = date_format("%Y-%b"),
+               breaks = seq(min(OTS_Master_JDBC$PLANNED_STOCKED_DATE)-5, max(OTS_Master_JDBC$PLANNED_STOCKED_DATE)+5, 30)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  ggtitle("OTS (JDBC) Planned Stocked Date Distribution")
+```
+
