@@ -226,6 +226,10 @@ OTS_Master <- OTS_Master %>%
 write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean_YTD.csv', sep = .Platform$file.sep ))
 write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean_YTD.csv', sep = .Platform$file.sep ))
 
+# Save Clean objects for visualization ----
+save(SOT_Master, file = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean_object.rtf', sep = .Platform$file.sep))
+save(OTS_Master, file = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean_object.rtf', sep = .Platform$file.sep ))
+ 
 SOT_Master %>% filter(ShipCancelWeek == EOW) %>% write_csv( path = paste(SOT_OTS_directory, "Clean_Files",  paste('SOT_Master_clean_wk', EOW, '.csv', sep = ""), sep = .Platform$file.sep ))
 OTS_Master %>% filter(Week == EOW) %>% write_csv( path = paste(SOT_OTS_directory, "Clean_Files",  paste('OTS_Master_clean_wk', EOW, '.csv', sep = ""), sep = .Platform$file.sep ))
 

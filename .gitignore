@@ -23,7 +23,7 @@ $RECYCLE.BIN/
 *.accdb
 .Rproj.user
 
-.RData
+*.RData
 .Rhistory
 .gitignore
 *.rda
@@ -31,3 +31,7 @@ $RECYCLE.BIN/
 *.csv
 *.log.*
 *.log
+*.Rmd
+*.md
+README.md
+*.png
