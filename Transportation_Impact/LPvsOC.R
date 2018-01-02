@@ -146,7 +146,10 @@ brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR I
 Trans_output <- SOT_Master_FOB %>%
   filter(ShipCancelWeek == EOW,  !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   group_by(ReportingBrand) %>% 
-  summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
+  summarise(
+    "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
+    "Total_Units" = (sum(Units, na.rm = TRUE)),
+    "SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
     "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
     "Air_Vendor_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
     "Vendor_non_Air_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -154,13 +157,15 @@ Trans_output <- SOT_Master_FOB %>%
     "Total_Impact" = sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `Unmeasured_Impact` + `SOT %`)) %>% 
   right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
-  select(ReportingBrand, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
-
+  select(ReportingBrand, `Late_Units`,`Total_Units`, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
 Trans_output_Category <- SOT_Master_FOB %>%
   filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   group_by(Category) %>% 
-  summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
+  summarise(
+            "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
+            "Total_Units" = (sum(Units, na.rm = TRUE)),
+            "SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
             "Air_Vendor_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
             "Vendor_non_Air_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -168,12 +173,15 @@ Trans_output_Category <- SOT_Master_FOB %>%
             "Total_Impact" = sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `Unmeasured_Impact` + `SOT %`)) %>% 
   right_join(as.data.frame(cat_vec), by = c("Category" = "cat_vec")) %>% 
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
-  select(Category, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
+  select(Category, `Late_Units`,`Total_Units`,`SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
 Trans_output_GapInc <- SOT_Master_FOB %>%
   filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
   # group_by(ReportingBrand) %>% 
-  summarise("SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
+  summarise(
+            "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
+            "Total_Units" = sum(Units),
+            "SOT %" = (sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured")),
             "Transport_Impact" = (sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured")),
             "Air_Vendor_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
             "Vendor_non_Air_Impact" = (sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured")),
@@ -181,7 +189,7 @@ Trans_output_GapInc <- SOT_Master_FOB %>%
             "Total_Impact" = sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `Unmeasured_Impact` + `SOT %`)) %>% 
   # right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
   mutate("SOT Variance from Target" = `SOT %` -.95) %>% 
-  select(`SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
+  select(`Late_Units`,`Total_Units`, `SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
 Trans_Units_for_commentary <- SOT_Master_FOB %>% 
   filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
