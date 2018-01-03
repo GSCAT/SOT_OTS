@@ -50,6 +50,7 @@ gc() # Garbage collection (BASE)
 jdbc_fetch <- dbSendQuery(conn, "SELECT * FROM SRAA_SAND.VIEW_SOT_MASTER")
 
 chunk <-  dbFetch(jdbc_fetch, 1)
+chunk$Data_Pulled == Sys.Date()
 length <- dbGetQuery(conn, "Select count(*) from SRAA_SAND.VIEW_SOT_MASTER")
 system.time(while (!nrow(chunk) >= length) {
   chunk <- rbind(chunk, dbFetch(jdbc_fetch, 100000))
@@ -65,6 +66,7 @@ gc()
 jdbc_fetch <- dbSendQuery(conn, "SELECT * FROM SRAA_SAND.VIEW_OTS_MASTER")
 
 chunk <-  dbFetch(jdbc_fetch, 1)
+chunk$Data_Pulled == Sys.Date()
 length <- dbGetQuery(conn, "Select count(*) from SRAA_SAND.VIEW_OTS_MASTER")
 system.time(while (!nrow(chunk) >= length) {
   chunk <- rbind(chunk, dbFetch(jdbc_fetch, 100000))
@@ -80,6 +82,8 @@ gc()
 
 total_rows_SOT <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
 total_rows_OTS <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+total_rows_SOT
+total_rows_OTS
 date_check <- dbGetQuery(conn, statement = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
 max_stock_date <-  dbGetQuery(conn, statement = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
@@ -98,8 +102,6 @@ OTS_Master[, c(7:11, 30:31, 33:34)] <- OTS_Master[, c(7:11, 30:31, 33:34)] %>% m
 # date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
 # max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
-total_rows_SOT
-total_rows_OTS
 date_check
 max_stock_date
 

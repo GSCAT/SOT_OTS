@@ -39,6 +39,10 @@ by_logistics_reason <- OTS_Master_Logistics_Impact %>%
   group_by(Logistics_Impact) %>%
   summarise("Units" = sum(Units))
   
+by_logistics_reason_Inc <- OTS_Master_Logistics_Impact %>%
+  filter(Week == EOW, Lateness == "Late") %>%
+  group_by(OTP) %>%
+  summarise("Units" = sum(Units))
 # write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = "\\"))
 
 # write_csv(OTS_by_brand, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "something.csv", sep = .Platform$file.sep))
