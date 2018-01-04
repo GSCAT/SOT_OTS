@@ -43,6 +43,15 @@ by_logistics_reason_Inc <- OTS_Master_Logistics_Impact %>%
   filter(Week == EOW, Lateness == "Late") %>%
   group_by(OTP) %>%
   summarise("Units" = sum(Units))
+
+# For Impact email comments ----
+OTS_Impact_Comment_df <- OTS_Master_Logistics_Impact %>%
+  filter(Week == EOW, Lateness == "Late") %>% 
+  group_by(OTS) %>% 
+  summarise("Units" = sum(Units))
+
+OTS_Impact_Comment_df
+
 # write_csv(by_logistics_reason, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "by_logistics_reason.csv", sep = "\\"))
 
 # write_csv(OTS_by_brand, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "something.csv", sep = .Platform$file.sep))
