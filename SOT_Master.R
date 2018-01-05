@@ -24,6 +24,10 @@ library(DBI)
 # Start with clean environment ----
 # rm(list = ls())
 
+# Save Workspace ----
+# rm(credentials)
+# save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
+
 # create functions and prompt for environment variables ----
 SOT_set_env <- function(){
   source("prompts.R")
@@ -40,8 +44,8 @@ if(!"credentials" %in% ls()){
 # Create RODBC connection ----
 # my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-
 # sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+
 drv=JDBC("com.teradata.jdbc.TeraDriver","C:\\TeraJDBC__indep_indep.16.10.00.05\\terajdbc4.jar;C:\\TeraJDBC__indep_indep.16.10.00.05\\tdgssconfig.jar")
 conn=dbConnect(drv,"jdbc:teradata://10.107.56.31/LOGMECH=LDAP",credentials$my_uid, credentials$my_pwd)
 dbGetQuery(conn, statement = "SELECT  * from dbc.dbcinfo;")
