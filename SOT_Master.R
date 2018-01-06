@@ -27,6 +27,7 @@ library(DBI)
 # Save Workspace ----
 # rm(credentials)
 # save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
+# load("C:\\Users\\Ke2l8b1\\Documents\\Reporting\\SOT Weekly\\2017\\Weekly\\Week 47\\Week_47.RData")
 
 # create functions and prompt for environment variables ----
 SOT_set_env <- function(){
