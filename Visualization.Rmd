@@ -28,7 +28,13 @@ SOT_viz_by_brand <- SOT_Master %>%
 
 ```{r pressure, echo=FALSE}
 for (brand in unique(SOT_viz_by_brand$ReportingBrand)) {
-  p1 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, Units)) + 
+  p1 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == "BR INTL"), aes(ShipCancelWeek, SOT, label = SOT)) +
+  geom_line(colour = "#56B4E9", size = 1) +
+  xlab("Fiscal Week") +
+  ylab("SOT (%)") +
+  theme_minimal()
+  
+  p2 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, Units)) + 
   geom_col(aes(fill = Lateness)) +
   scale_y_continuous(labels = scales::comma) + 
   xlab("Fiscal Week") +
@@ -36,14 +42,23 @@ for (brand in unique(SOT_viz_by_brand$ReportingBrand)) {
   ggtitle(paste(brand,"Weekly Shipped On Time to Contract", sep = " ")) +
     theme_minimal()
   
-  p2 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == "BR INTL"), aes(ShipCancelWeek, SOT, label = SOT)) +
-  geom_line(colour = "#56B4E9", size = 1) +
-  xlab("Fiscal Week") +
-  ylab("SOT (%)") +
-  theme_minimal()
-  
   print(plot_grid(p1,p2, ncol = 1, align = 'v', axis = 'lr'))
 
 }
+```
+
+## Weekly SOT Impact by Brand
+
+```{r}
+for (brand in (unique(SOT_impact_viz$ReportingBrand))) {
+  p <- ggplot(subset(SOT_impact_viz,ReportingBrand == brand), aes(ShipCancelWeek, Percentage, colour = Impact)) +
+  geom_line(size = 1) +
+  xlab("Fiscal Week") +
+  ylab("SOT") +
+  ggtitle(paste((brand),"Weekly Shipped On Time",sep = " ")) +
+  theme_minimal()
+  print(p)
+}
+
 ```
 
