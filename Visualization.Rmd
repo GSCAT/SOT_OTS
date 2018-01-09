@@ -13,6 +13,8 @@ library(ggplot2)
 library(cowplot)
 
 load("C:\\Users\\wenlu\\Box Sync\\SOT OTS\\Week 48\\Week_48.RData")
+SOT_Master_FOB$Units <- as.integer(SOT_Master_FOB$Units)
+
 SOT_viz_by_brand <- SOT_Master %>%
   filter(FISCAL_YEAR == fis_yr) %>%
   group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>%
@@ -22,43 +24,119 @@ SOT_viz_by_brand <- SOT_Master %>%
   mutate(SOT = round(OnTime/TotalUnits*100,2)) %>%
   gather("Lateness", "Units", OnTime:Late) %>%
   droplevels()
+
+SOT_impact_units_viz <- SOT_Master_FOB %>%
+  filter(FISCAL_YEAR == fis_yr) %>%
+  group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>% 
+  summarise(
+    "Total_Units" = (sum(Units, na.rm = TRUE)),
+    "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
+    "SOT %" = round((sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
+    "Transport_Impact" = sum(subset(Units, `Probable Failure` == "Transportation")),
+    "Air_Vendor_Impact" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )),
+    "Vendor_non_Air_Impact" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" ))) %>%
+  mutate("Unmeasured_Impact" = Late_Units - (Transport_Impact + Air_Vendor_Impact + Vendor_non_Air_Impact)) %>%
+  select(ReportingBrand,ShipCancelMonth,ShipCancelWeek,`Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`) %>%
+  gather("Impact","Units", Transport_Impact:Unmeasured_Impact)
+
+SOT_impact_perc_viz <- SOT_Master_FOB %>%
+  filter(FISCAL_YEAR == fis_yr) %>%
+  group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>% 
+  summarise(
+    "Total_Units" = (sum(Units, na.rm = TRUE)),
+    "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
+    "SOT %" = round((sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
+    "Transport_Impact" = round((sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
+    "Air_Vendor_Impact" = round((sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
+    "Vendor_non_Air_Impact" = round((sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
+    "Unmeasured_Impact" = 100 - sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `SOT %`)) %>% 
+  select(ReportingBrand,ShipCancelMonth,ShipCancelWeek,`Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`) %>%
+  gather("Impact","Perc", Transport_Impact:Unmeasured_Impact)
+
+brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
+
+OTS_viz_by_brand <- OTS_Master %>%
+  group_by(ReportingBrand, Month_Number,Week) %>%
+  summarise(TotalUnits= sum(Units), 
+            OnTimeUnits = sum(Units[Lateness=="OnTime"], na.rm = T), 
+            LateUnits = sum(Units[Lateness=="Late"])) %>% 
+  mutate(OTS = round(OnTimeUnits/TotalUnits*100,2)) %>%
+  right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
+  select(ReportingBrand, Month_Number,Week, OTS, TotalUnits, OnTimeUnits, LateUnits) %>% 
+  gather("Lateness", "Units", OnTimeUnits:LateUnits) %>% 
+  droplevels()
+
 ```
 
-## Weekly SOTC-OTS By Brand
+## Weekly SOTC By Brand
 
-```{r pressure, echo=FALSE}
+```{r, echo=FALSE}
 for (brand in unique(SOT_viz_by_brand$ReportingBrand)) {
-  p1 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == "BR INTL"), aes(ShipCancelWeek, SOT, label = SOT)) +
-  geom_line(colour = "#56B4E9", size = 1) +
-  xlab("Fiscal Week") +
-  ylab("SOT (%)") +
-  theme_minimal()
+  p1 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, SOT)) +
+    geom_line(colour = "#56B4E9", size = 1) +
+    xlab("Fiscal Week") +
+    ylab("SOT (%)") +
+    ggtitle(paste(brand,"Weekly Shipped On Time to Contract", sep = " ")) +
+    theme_minimal()
   
   p2 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, Units)) + 
-  geom_col(aes(fill = Lateness)) +
-  scale_y_continuous(labels = scales::comma) + 
-  xlab("Fiscal Week") +
-  ylab("Shipped Units") +
-  ggtitle(paste(brand,"Weekly Shipped On Time to Contract", sep = " ")) +
+    geom_col(aes(fill = Lateness)) +
+    scale_y_continuous(labels = scales::comma) + 
+    xlab("Fiscal Week") +
+    ylab("Shipped Units") +
     theme_minimal()
   
   print(plot_grid(p1,p2, ncol = 1, align = 'v', axis = 'lr'))
+}
+```
+
+## Weekly OTS by Brand
+
+```{r, echo = FALSE}
+for (brand in unique(OTS_viz_by_brand$ReportingBrand)) {
+  p5 <- ggplot(subset(OTS_viz_by_brand,ReportingBrand == brand), aes(Week, OTS)) + 
+    geom_line(colour = "#56B4E9", size = 1) +
+    xlab("Fiscal Week") +
+    ylab("OTS (%)") +
+    ggtitle(paste(brand,"Weekly On Time to Stocked", sep = " ")) +
+    theme_minimal()
+
+  p6 <- ggplot(subset(OTS_viz_by_brand,ReportingBrand == brand), aes(Week, Units)) +
+    geom_col(aes(fill = Lateness)) +
+    scale_y_continuous(labels = scales::comma) + 
+    xlab("Fiscal Week") +
+    ylab("Stocked Units") +
+    theme_minimal()
+  
+  print(plot_grid(p5,p6, ncol = 1, align = 'v', axis = 'lr'))
 
 }
 ```
+
 
 ## Weekly SOT Impact by Brand
 
-```{r}
-for (brand in (unique(SOT_impact_viz$ReportingBrand))) {
-  p <- ggplot(subset(SOT_impact_viz,ReportingBrand == brand), aes(ShipCancelWeek, Percentage, colour = Impact)) +
-  geom_line(size = 1) +
+```{r, echo=FALSE}
+for (brand in (unique(SOT_impact_perc_viz$ReportingBrand))) {
+  
+  p3 <- ggplot(subset(SOT_impact_perc_viz,ReportingBrand == brand), aes(ShipCancelWeek, Perc, colour = Impact)) +
+    geom_line(size = 1) +
+    xlab("Fiscal Week") +
+    ylab("Late Units/Total Units (%)") +
+    ggtitle(paste(brand,"Weekly SOTC Lateness", sep = " ")) +
+    theme_minimal()
+  
+  p4 <- ggplot(subset(SOT_impact_units_viz,ReportingBrand == brand), aes(ShipCancelWeek, Units)) +
+  geom_col(aes(fill = Impact)) +
   xlab("Fiscal Week") +
-  ylab("SOT") +
-  ggtitle(paste((brand),"Weekly Shipped On Time",sep = " ")) +
+  ylab("Late Units") +
   theme_minimal()
-  print(p)
+  
+  print(plot_grid(p3,p4, ncol = 1, align = 'v', axis = 'lr'))
 }
 
+
 ```
+
+
 
