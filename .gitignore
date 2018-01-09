@@ -31,7 +31,6 @@ $RECYCLE.BIN/
 *.csv
 *.log.*
 *.log
-*.Rmd
 *.md
 README.md
 *.png

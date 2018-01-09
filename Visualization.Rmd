@@ -1,0 +1,49 @@
+---
+title: "Visualization"
+author: "Wendy L."
+date: "January 8, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+
+load("C:\\Users\\wenlu\\Box Sync\\SOT OTS\\Week 48\\Week_48.RData")
+SOT_viz_by_brand <- SOT_Master %>%
+  filter(FISCAL_YEAR == fis_yr) %>%
+  group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>%
+  summarise(TotalUnits= sum(Units), 
+            OnTime = sum(Units[Lateness=="OnTime"]), 
+            Late = sum(Units[Lateness=="Late"])) %>% 
+  mutate(SOT = round(OnTime/TotalUnits*100,2)) %>%
+  gather("Lateness", "Units", OnTime:Late) %>%
+  droplevels()
+```
+
+## Weekly SOTC-OTS By Brand
+
+```{r pressure, echo=FALSE}
+for (brand in unique(SOT_viz_by_brand$ReportingBrand)) {
+  p1 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, Units)) + 
+  geom_col(aes(fill = Lateness)) +
+  scale_y_continuous(labels = scales::comma) + 
+  xlab("Fiscal Week") +
+  ylab("Shipped Units") +
+  ggtitle(paste(brand,"Weekly Shipped On Time to Contract", sep = " ")) +
+    theme_minimal()
+  
+  p2 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == "BR INTL"), aes(ShipCancelWeek, SOT, label = SOT)) +
+  geom_line(colour = "#56B4E9", size = 1) +
+  xlab("Fiscal Week") +
+  ylab("SOT (%)") +
+  theme_minimal()
+  
+  print(plot_grid(p1,p2, ncol = 1, align = 'v', axis = 'lr'))
+
+}
+```
+
