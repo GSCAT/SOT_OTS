@@ -34,6 +34,7 @@ list.of.packages <- c("readxl", "xlsx", "plotly", "tidyr", "mosaic", "devtools")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
+# Sys.setenv(JAVA_HOME='C:\\Program Files\\Java\\jre1.8.0_161')
 
 library(readxl)
 library(xlsx)
@@ -41,7 +42,7 @@ library(plotly)
 library(tidyr)
 library(mosaic)
 library(devtools)
-devtools::install_github("tidyverse/magrittr")
+# devtools::install_github("tidyverse/magrittr")
 library(magrittr)
 library(dplyr)
 library(readr)
