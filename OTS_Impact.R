@@ -2,11 +2,16 @@ library(readr)
 library(dplyr)
 
 ### Get Weekly dashboard file from here: https://gapinc.app.box.com/folder/26906947114
+paste(SOT_OTS_directory, 
+      grep("Weekly Dashboard", 
+           list.files(SOT_OTS_directory), 
+           value = TRUE), sep = .Platform$file.sep)
 
 OTP_Logistics <- read.csv(paste(SOT_OTS_directory, 
                                  grep("Weekly Dashboard", 
                                       list.files(SOT_OTS_directory), 
                                       value = TRUE), sep = .Platform$file.sep))
+
 
 cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
 brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
@@ -33,6 +38,11 @@ by_logistics_reason <- OTP_Logistics %>%
 OTS_Master_Logistics_Impact <- OTS_Master %>% 
   left_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Destination.PO.DPO.NBR")) %>% 
   left_join(logistics_reason, by = c("Logistics_Impact" = "Logistics_Impact"))
+
+OTS_Master_Logistics_Impact %>% 
+  filter(Week == EOW) %>% 
+  write_csv(paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", paste("OTS_Master_wk_", EOW, ".csv", sep = ""), sep = .Platform$file.sep))
+
 
 by_logistics_reason <- OTS_Master_Logistics_Impact %>%
   filter(Week == EOW, Lateness == "Late") %>%
