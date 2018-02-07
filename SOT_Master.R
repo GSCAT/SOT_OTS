@@ -24,11 +24,6 @@ library(DBI)
 # Start with clean environment ----
 # rm(list = ls())
 
-# Save Workspace ----
-# rm(credentials)
-# save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
-# load("C:\\Users\\Ke2l8b1\\Documents\\Reporting\\SOT Weekly\\2017\\Weekly\\Week 47\\Week_47.RData")
-
 # create functions and prompt for environment variables ----
 SOT_set_env <- function(){
   source("prompts.R")
@@ -41,6 +36,11 @@ if(!"credentials" %in% ls()){
   path <- Sys.getenv("USERPROFILE")
   credentials <- yaml.load_file(paste(path, "Desktop", "credentials.yml", sep = .Platform$file.sep))
 }
+
+# Save Workspace ----
+# rm(credentials)
+# save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
+# load(file = paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep = .Platform$file.sep))
 
 # Create RODBC connection ----
 # my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
