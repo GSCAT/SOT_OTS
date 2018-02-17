@@ -94,11 +94,16 @@ max_stock_date <-  dbGetQuery(conn, statement = "select max(ACTUAL_STOCKED_LCL_D
 
 dbDisconnect(conn)
 # Convert Dates and factors ----
-SOT_Master[, c(6:7, 9:12, 41:43)] <- SOT_Master[, c(6:7, 9:12, 41:43)] %>% mutate_all(funs(as.Date(.)))
+
+# SOT_Master[, c(6:7, 9:12, 41:43)] <- SOT_Master[, c(6:7, 9:12, 41:43)] %>% mutate_all(funs(as.Date(.)))
+SOT_Master[ , c('Contract_Ship_Cancel','SHIP_CANCEL_DATE','MetricShipDate','ACTUAL_ORIGIN_CONSOL_LCL_DATE',
+                'ACTUAL_LP_LCL_DATE','StockedDate','Data_Pulled','PLANNED_IN_DC_DATE','ACTUAL_IN_DC_LCL_DATE')] <- SOT_Master[ , c('Contract_Ship_Cancel','SHIP_CANCEL_DATE','MetricShipDate','ACTUAL_ORIGIN_CONSOL_LCL_DATE',
+                                                                                                                                   'ACTUAL_LP_LCL_DATE','StockedDate','Data_Pulled','PLANNED_IN_DC_DATE','ACTUAL_IN_DC_LCL_DATE')]  %>% mutate_all(funs(as.Date(.)))
 SOT_Master <- SOT_Master %>%
 mutate_all(funs(if(is.character(.)) as.factor(.) else .))
 
-OTS_Master[, c(7:11, 30:31, 33:34)] <- OTS_Master[, c(7:11, 30:31, 33:34)] %>% mutate_all(funs(as.Date(.)))
+# OTS_Master[, c(7:11, 30:31, 33:34)] <- OTS_Master[, c(7:11, 30:31, 33:34)] %>% mutate_all(funs(as.Date(.)))
+OTS_Master[, c('Contract_Ship_Cancel','cur_in_dc_dt','PLANNED_STOCKED_DATE','inDCDTe','StkdDte','SHIP_CANCEL_DATE','ACTUAL_LP_LCL_DATE','ACTUAL_IN_DC_LCL_DATE','Data_Pulled')] <- OTS_Master[, c('Contract_Ship_Cancel','cur_in_dc_dt','PLANNED_STOCKED_DATE','inDCDTe','StkdDte','SHIP_CANCEL_DATE','ACTUAL_LP_LCL_DATE','ACTUAL_IN_DC_LCL_DATE','Data_Pulled')] %>% mutate_all(funs(as.Date(.)))
 # OTS_Master <- OTS_Master %>%
 #   mutate_all(funs(if(is.character(.)) as.factor(.) else .))
 
@@ -197,6 +202,7 @@ write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",
 OTS_Master <- OTS_Master %>% 
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>% 
   filter(Week <= EOW,
+         PLANNED_STOCKED_DATE >= "2018-02-04",
         !is.na(DC_NAME),
         !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
         !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
