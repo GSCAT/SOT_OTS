@@ -3,12 +3,12 @@ library(dplyr)
 
 ### Get Weekly dashboard file from here: https://gapinc.app.box.com/folder/26906947114
 paste(SOT_OTS_directory, 
-      grep("Weekly Dashboard", 
+      grep("Weekly", 
            list.files(SOT_OTS_directory), 
            value = TRUE), sep = .Platform$file.sep)
 
 OTP_Logistics <- read.csv(paste(SOT_OTS_directory, 
-                                 grep("Weekly Dashboard", 
+                                 grep("Weekly", 
                                       list.files(SOT_OTS_directory), 
                                       value = TRUE), sep = .Platform$file.sep))
 
