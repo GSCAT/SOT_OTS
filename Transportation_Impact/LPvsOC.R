@@ -215,14 +215,16 @@ Trans_output_GapInc <- SOT_Master_FOB %>%
 
 Trans_Units_for_commentary <- SOT_Master_FOB %>% 
   filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
-  summarise("Total_Late_Units" = sum(subset(Units, Lateness == "Late")),
+  summarise("Total_Units" = sum(Units),
+            "Total_Late_Units" = sum(subset(Units, Lateness == "Late")),
             "Transportation_Delay_Units" = floor(sum(subset(Units, `Probable Failure` == "Transportation"))),
             "Vendor_Air_Delay_Units" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )),
             "Vendor_nonair_Delay_Units" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )),
-            "Untested_Units" = floor(sum(subset(Units, `Probable Failure` == "Not Tested" & Lateness == "Late"))))
+            "Untested_Units" = floor(sum(subset(Units, `Probable Failure` == "Not Tested" & Lateness == "Late"))),
+            "Unmeasured_Units" = sum(subset(Units, Lateness == "Unmeasured")))
 Trans_Units_for_commentary
 
-write_csv(Trans_Units_for_commentary, paste(SOT_OTS_directory, "Impact_files",  "Trans_Units_for_commentary.csv", sep = .Platform$file.sep))           
+# write_csv(Trans_Units_for_commentary, paste(SOT_OTS_directory, "Impact_files",  "Trans_Units_for_commentary.csv", sep = .Platform$file.sep))           
 
 
 Trans_output_YTD <- SOT_Master_FOB %>%
