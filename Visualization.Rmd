@@ -1,141 +1,573 @@
 ---
-title: "Visualization"
-author: "Wendy L."
-date: "January 8, 2018"
-output: pdf_document
+output: 
+  html_document:
+    theme: cerulean
 ---
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.table.format = "html")
+library(plotly)
 library(dplyr)
 library(tidyr)
-library(ggplot2)
-library(cowplot)
+library(htmltools)
+library(knitr)
+library(kableExtra)
+library(scales)
 
-load("C:\\Users\\wenlu\\Box Sync\\SOT OTS\\Week 48\\Week_48.RData")
-SOT_Master_FOB$Units <- as.integer(SOT_Master_FOB$Units)
+# Load YTD SOT and OTS Master objects
+# load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 53\\Clean_Files\\SOT_Master_clean_object.rtf")
+# load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 53\\Clean_Files\\OTS_Master_clean_object.rtf")
 
+load("G:\\SF-SPEND_ANALYTICS\\Costing Analytics\\4 Cost\\AAA_Service Metrics\\2017\\Weekly Reports\\Week 53\\Week 53\\Clean_Files\\SOT_Master_clean_object.rtf")
+load("G:\\SF-SPEND_ANALYTICS\\Costing Analytics\\4 Cost\\AAA_Service Metrics\\2017\\Weekly Reports\\Week 53\\Week 53\\Clean_Files\\OTS_Master_clean_object.rtf")
+
+fis_yr <- 2017L
+brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
+```
+
+```{r include=FALSE}
+options(digits = 3)
+
+# SOT by brand weekly trend  
 SOT_viz_by_brand <- SOT_Master %>%
   filter(FISCAL_YEAR == fis_yr) %>%
   group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>%
   summarise(TotalUnits= sum(Units), 
             OnTime = sum(Units[Lateness=="OnTime"]), 
             Late = sum(Units[Lateness=="Late"])) %>% 
-  mutate(SOT = round(OnTime/TotalUnits*100,2)) %>%
-  gather("Lateness", "Units", OnTime:Late) %>%
-  droplevels()
+  ungroup() %>% 
+  mutate(SOT = round(OnTime/TotalUnits,4)*100) %>%
+  # gather("Lateness", "Units", OnTime:Late) %>%
+  droplevels() %>% 
+  arrange(ShipCancelWeek)
 
-SOT_impact_units_viz <- SOT_Master_FOB %>%
+SOT_GapInc <- SOT_Master %>% 
   filter(FISCAL_YEAR == fis_yr) %>%
-  group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>% 
-  summarise(
-    "Total_Units" = (sum(Units, na.rm = TRUE)),
-    "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
-    "SOT %" = round((sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
-    "Transport_Impact" = sum(subset(Units, `Probable Failure` == "Transportation")),
-    "Air_Vendor_Impact" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )),
-    "Vendor_non_Air_Impact" = sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" ))) %>%
-  mutate("Unmeasured_Impact" = Late_Units - (Transport_Impact + Air_Vendor_Impact + Vendor_non_Air_Impact)) %>%
-  select(ReportingBrand,ShipCancelMonth,ShipCancelWeek,`Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`) %>%
-  gather("Impact","Units", Transport_Impact:Unmeasured_Impact)
+  group_by(ShipCancelMonth, ShipCancelWeek) %>%
+  summarise(TotalUnits= sum(Units), 
+            OnTime = sum(Units[Lateness=="OnTime"]), 
+            Late = sum(Units[Lateness=="Late"])) %>% 
+  ungroup() %>% 
+  mutate(SOT = round(OnTime/TotalUnits,4)*100) %>%
+  # gather("Lateness", "Units", OnTime:Late) %>%
+  droplevels() %>% 
+  arrange(ShipCancelWeek)
 
-SOT_impact_perc_viz <- SOT_Master_FOB %>%
-  filter(FISCAL_YEAR == fis_yr) %>%
-  group_by(ReportingBrand, ShipCancelMonth, ShipCancelWeek) %>% 
-  summarise(
-    "Total_Units" = (sum(Units, na.rm = TRUE)),
-    "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),
-    "SOT %" = round((sum(subset(Units, Lateness == "OnTime"), na.rm = TRUE))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
-    "Transport_Impact" = round((sum(subset(Units, `Probable Failure` == "Transportation")))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
-    "Air_Vendor_Impact" = round((sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD == "A" )))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
-    "Vendor_non_Air_Impact" = round((sum(subset(Units, `Probable Failure` == "Vendor" & SHIP_MODE_CD != "A" )))/sum(subset(Units, Lateness != "Unmeasured"))*100,2),
-    "Unmeasured_Impact" = 100 - sum(`Transport_Impact` + `Air_Vendor_Impact` + `Vendor_non_Air_Impact` + `SOT %`)) %>% 
-  select(ReportingBrand,ShipCancelMonth,ShipCancelWeek,`Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`) %>%
-  gather("Impact","Perc", Transport_Impact:Unmeasured_Impact)
+# SOT_viz_by_brand$Lateness <- as.factor((SOT_viz_by_brand$Lateness))
+# SOT_viz_by_brand$Lateness <- factor(SOT_viz_by_brand$Lateness, levels = rev(levels(SOT_viz_by_brand$Lateness)))
 
-brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
+SOT <- split(SOT_viz_by_brand, f = SOT_viz_by_brand$ReportingBrand)
 
 OTS_viz_by_brand <- OTS_Master %>%
   group_by(ReportingBrand, Month_Number,Week) %>%
   summarise(TotalUnits= sum(Units), 
-            OnTimeUnits = sum(Units[Lateness=="OnTime"], na.rm = T), 
-            LateUnits = sum(Units[Lateness=="Late"])) %>% 
-  mutate(OTS = round(OnTimeUnits/TotalUnits*100,2)) %>%
-  right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
-  select(ReportingBrand, Month_Number,Week, OTS, TotalUnits, OnTimeUnits, LateUnits) %>% 
-  gather("Lateness", "Units", OnTimeUnits:LateUnits) %>% 
-  droplevels()
+            OnTime = sum(Units[Lateness=="OnTime"], na.rm = T), 
+            Late = sum(Units[Lateness=="Late"])) %>% 
+  ungroup() %>% 
+  mutate(OTS = round(OnTime/TotalUnits,4)*100) %>%
+  select(ReportingBrand, Month_Number,Week, OTS, TotalUnits, OnTime, Late) %>% 
+  # gather("Lateness", "Units", OnTime:Late) %>%
+  droplevels() %>% 
+  arrange(Week)
+
+OTS_GapInc <- OTS_Master %>%
+  group_by(Month_Number,Week) %>%
+  summarise(TotalUnits= sum(Units), 
+            OnTime = sum(Units[Lateness=="OnTime"], na.rm = T), 
+            Late = sum(Units[Lateness=="Late"])) %>% 
+  ungroup() %>% 
+  mutate(OTS = round(OnTime/TotalUnits,4)*100) %>%
+  select(Month_Number,Week, OTS, TotalUnits, OnTime, Late) %>% 
+  # gather("Lateness", "Units", OnTime:Late) %>%
+  droplevels() %>% 
+  arrange(Week)
+
+OTS <- split(OTS_viz_by_brand, f = OTS_viz_by_brand$ReportingBrand)
+# OTS_viz_by_brand$Lateness <- as.factor(OTS_viz_by_brand$Lateness)
+# OTS_viz_by_brand$Lateness <- factor(OTS_viz_by_brand$Lateness, levels = rev(levels(OTS_viz_by_brand$Lateness)))
+```
+
+### Gap Inc
+
+```{r}
+# rows <- c('Average', 'Highest', 'Lowest')
+# SOT <- c(percent(mean(SOT_GapInc$SOT)), percent(max(SOT_GapInc$SOT)), percent(min(SOT_GapInc$SOT)))
+# ShipCancelWeek <- c('',SOT_GapInc[SOT_GapInc$SOT == max(SOT_GapInc$SOT),]$ShipCancelWeek, SOT_GapInc[SOT_GapInc$SOT == min(SOT_GapInc$SOT),]$ShipCancelWeek)
+# OTS <- c(percent(mean(OTS_GapInc$OTS)), percent(max(OTS_GapInc$OTS)), percent(min(OTS_GapInc$OTS)))
+# PlannedStockWeek <- c('', OTS_GapInc[OTS_GapInc$OTS == max(OTS_GapInc$OTS),]$Week, OTS_GapInc[OTS_GapInc$OTS == min(OTS_GapInc$OTS),]$Week)
+# kable(data.frame(SOT, ShipCancelWeek, OTS, PlannedStockWeek, row.names = rows)) %>%
+#   kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+options(digits = 3)
+
+p1_1 <- plot_ly(SOT_GapInc) %>% 
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+       xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'Gap Inc Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+p1_2 <- plot_ly(OTS_GapInc) %>% 
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y", hoverformat ='.2s'),
+         title = 'Gap Inc Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p1_1, style = "width: 50%;"),
+  tags$div(p1_2, style = "width: 50%;")))
+  
+```
+
+### Old Navy North America
+
+```{r}
+p1 <- plot_ly(SOT[['ON NA']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+       xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'Old Navy NA Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+p2 <- plot_ly(OTS[['ON NA']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'Old Navy NA Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p1, style = "width: 50%;"),
+  tags$div(p2, style = "width: 50%;")
+))
 
 ```
 
-## Weekly SOTC By Brand
+### Old Navy International
 
-```{r, echo=FALSE}
-for (brand in unique(SOT_viz_by_brand$ReportingBrand)) {
-  p1 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, SOT)) +
-    geom_line(colour = "#56B4E9", size = 1) +
-    xlab("Fiscal Week") +
-    ylab("SOT (%)") +
-    ggtitle(paste(brand,"Weekly Shipped On Time to Contract", sep = " ")) +
-    theme_minimal()
-  
-  p2 <- ggplot(subset(SOT_viz_by_brand,ReportingBrand == brand), aes(ShipCancelWeek, Units)) + 
-    geom_col(aes(fill = Lateness)) +
-    scale_y_continuous(labels = scales::comma) + 
-    xlab("Fiscal Week") +
-    ylab("Shipped Units") +
-    theme_minimal()
-  
-  print(plot_grid(p1,p2, ncol = 1, align = 'v', axis = 'lr'))
-}
-```
+```{r}
+p3 <- plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'ON INTL')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+       xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'Old Navy INTL Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+       margin = list(t = 105, b = 105))
 
-## Weekly OTS by Brand
 
-```{r, echo = FALSE}
-for (brand in unique(OTS_viz_by_brand$ReportingBrand)) {
-  p5 <- ggplot(subset(OTS_viz_by_brand,ReportingBrand == brand), aes(Week, OTS)) + 
-    geom_line(colour = "#56B4E9", size = 1) +
-    xlab("Fiscal Week") +
-    ylab("OTS (%)") +
-    ggtitle(paste(brand,"Weekly On Time to Stocked", sep = " ")) +
-    theme_minimal()
+p4 <- plot_ly(subset(OTS_viz_by_brand,ReportingBrand == 'ON INTL')) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'Old Navy INTL Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
 
-  p6 <- ggplot(subset(OTS_viz_by_brand,ReportingBrand == brand), aes(Week, Units)) +
-    geom_col(aes(fill = Lateness)) +
-    scale_y_continuous(labels = scales::comma) + 
-    xlab("Fiscal Week") +
-    ylab("Stocked Units") +
-    theme_minimal()
-  
-  print(plot_grid(p5,p6, ncol = 1, align = 'v', axis = 'lr'))
-
-}
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p3, style = "width: 50%;"),
+  tags$div(p4, style = "width: 50%;")
+))
 ```
 
 
-## Weekly SOT Impact by Brand
+### GAP North America
 
-```{r, echo=FALSE}
-for (brand in (unique(SOT_impact_perc_viz$ReportingBrand))) {
-  
-  p3 <- ggplot(subset(SOT_impact_perc_viz,ReportingBrand == brand), aes(ShipCancelWeek, Perc, colour = Impact)) +
-    geom_line(size = 1) +
-    xlab("Fiscal Week") +
-    ylab("Late Units/Total Units (%)") +
-    ggtitle(paste(brand,"Weekly SOTC Lateness", sep = " ")) +
-    theme_minimal()
-  
-  p4 <- ggplot(subset(SOT_impact_units_viz,ReportingBrand == brand), aes(ShipCancelWeek, Units)) +
-  geom_col(aes(fill = Impact)) +
-  xlab("Fiscal Week") +
-  ylab("Late Units") +
-  theme_minimal()
-  
-  print(plot_grid(p3,p4, ncol = 1, align = 'v', axis = 'lr'))
-}
+```{r}
+p5 <- plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'GAP NA')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'GAP NA Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+p6 <- plot_ly(subset(OTS_viz_by_brand,ReportingBrand == 'GAP NA')) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'GAP NA Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p5, style = "width: 50%;"),
+  tags$div(p6, style = "width: 50%;")
+
+))
+
+```
 
 
+### GAP International
+
+```{r}
+p7 <- plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'GAP INTL')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'GAP INTL Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p8 <- plot_ly(subset(OTS_viz_by_brand,ReportingBrand == 'GAP INTL')) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'GAP INTL Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p7, style = "width: 50%;"),
+  tags$div(p8, style = "width: 50%;")
+
+))
+```
+
+### Gap Outlet North America
+
+
+```{r}
+p9 <- plot_ly(SOT[['GO NA']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'GO NA Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p10 <- plot_ly(OTS[['GO NA']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'GO NA Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p9, style = "width: 50%;"),
+  tags$div(p10, style = "width: 50%;")
+
+))
+```
+
+### Gap Outlet International
+
+```{r}
+p11 <- plot_ly(SOT[['GO INTL']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'GO INTL Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p12 <- plot_ly(OTS[['GO INTL']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'GO INTL Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p11, style = "width: 50%;"),
+  tags$div(p12, style = "width: 50%;")
+
+))
+```
+
+### Banana Republic North America
+
+```{r}
+p13 <- plot_ly(SOT[['BR NA']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'BR NA Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p14 <- plot_ly(OTS[['BR NA']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'BR NA Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p13, style = "width: 50%;"),
+  tags$div(p14, style = "width: 50%;")
+
+))
+```
+
+### Banana Republic International
+
+```{r}
+p15 <- plot_ly(SOT[['BR INTL']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'BR INTL Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p16 <- plot_ly(OTS[['BR INTL']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'BR INTL Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p15, style = "width: 50%;"),
+  tags$div(p16, style = "width: 50%;")
+
+))
+```
+
+
+### BRFS North America
+
+```{r}
+p17 <- plot_ly(SOT[['BRFS NA']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'BRFS NA Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p18 <- plot_ly(OTS[['BRFS NA']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'BRFS NA Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p17, style = "width: 50%;"),
+  tags$div(p18, style = "width: 50%;")
+
+))
+```
+
+### Atheta
+
+```{r}
+p17 <- plot_ly(SOT[['ATHLETA']]) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~OnTime, type = 'bar', name = 'OnTime',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~Late, type = 'bar', name = 'Late',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~ShipCancelWeek, y = ~SOT, type = 'scatter', mode = 'lines', name = 'SOT (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Ship Cancel Week'),
+       yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+       yaxis2  = list(side = 'right',overlaying = "y"),
+       title = 'Athleta Weekly Shipped On Time to Contract',
+       legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+
+p18 <- plot_ly(OTS[['ATHLETA']]) %>%
+  add_trace(x = ~Week, y = ~OnTime, type = 'bar', name = 'OnTime', xaxis = 'x1',
+            marker = list(color = '#4c8dd9')) %>%
+  add_trace(x = ~Week, y = ~Late, type = 'bar', name = 'Late', xaxis = 'x1',
+            marker = list(color ='#fc9d74')) %>%
+  add_trace(x = ~Week, y = ~OTS, type = 'scatter', mode = 'lines', name = 'OTS (%)', yaxis = 'y2',
+            line = list(color = '#5fd4b1', width = 2.5)) %>%
+  layout(barmode = 'stack',
+         xaxis = list(title = 'Planned Stock Week'),
+         yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
+         title = 'Athleta Weekly On Time to Stock',
+         legend =list(x = 1.05, y = 0.9),
+         margin = list(t = 105, b = 105))
+
+tagList(
+  tags$div(
+  style = "display: flex; flex-wrap: wrap",
+  tags$div(p17, style = "width: 50%;"),
+  tags$div(p18, style = "width: 50%;")
+
+))
 ```
 
 
