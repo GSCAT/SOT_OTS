@@ -4,8 +4,8 @@ library(dplyr)
 library(tidyr)
 
 ## Load YTD SOT and OTS Master objects
-# load("C:\\Users\\wenlu\\Documents\\GitHub\\SOTC_OTS_Weekly\\Viz\\SOT_Master_object.rtf")
-# load("C:\\Users\\wenlu\\Documents\\GitHub\\SOTC_OTS_Weekly\\Viz\\OTS_Master_object.rtf")
+load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 53\\Clean_Files\\SOT_Master_clean_object.rtf")
+load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 53\\Clean_Files\\OTS_Master_clean_object.rtf")
 
 fis_yr <- 2017L
 brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
