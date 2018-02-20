@@ -35,3 +35,7 @@ $RECYCLE.BIN/
 *.md
 README.md
 *.png
+
+# Domino files
+.domino*
+dominostats.json

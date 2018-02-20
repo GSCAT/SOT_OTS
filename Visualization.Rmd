@@ -125,7 +125,7 @@ p1_2 <- plot_ly(OTS_GapInc) %>%
   layout(barmode = 'stack',
          xaxis = list(title = 'Planned Stock Week'),
          yaxis  = list(title = 'Units', side = 'left', showgrid = FALSE, zeroline = FALSE, hoverformat ='.3s'),
-         yaxis2  = list(side = 'right',overlaying = "y", hoverformat ='.2s'),
+         yaxis2  = list(side = 'right',overlaying = "y"),
          title = 'Gap Inc Weekly On Time to Stock',
          legend =list(x = 1.05, y = 0.9),
          margin = list(t = 105, b = 105))
