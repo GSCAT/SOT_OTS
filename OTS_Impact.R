@@ -27,6 +27,8 @@ OTP_Logistics_sub <- OTP_Logistics %>%
   summarise("Logistics_Impact" = first(`Logistics_Impact`)) %>%
   droplevels()
 
+OTP_Logistics$Forecast.Units...PO.DPO <- as.numeric(OTP_Logistics$Forecast.Units...PO.DPO)
+
 by_logistics_reason <- OTP_Logistics %>% 
   filter(FiscalWeek == EOW) %>%
   select(Forecast.Units...PO.DPO,"Logistics_Impact"= `INDC.2`) %>% 
