@@ -2,14 +2,16 @@ library(dplyr)
 library(tidyr)
 library(mosaic)
 
-load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 2\\SOT_Master_object.rtf")
-load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 2\\OTS_Master_object.rtf")
+load("C:\\Users\\Ke2l8b1\\Documents\\Reporting\\SOT Weekly\\2018\\Week 3 2018\\RAW_Objects\\SOT_Master_object.rtf")
+load("C:\\Users\\Ke2l8b1\\Documents\\Reporting\\SOT Weekly\\2018\\Week 3 2018\\RAW_Objects\\OTS_Master_object.rtf")
+
+
 SOT_Data_Pulled <- SOT_Master$Data_Pulled[1]
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>% 
-  filter(PLANNED_STOCKED_DATE >= '2017-02-12' & PLANNED_STOCKED_DATE <= '2018-02-17',
+  filter(PLANNED_STOCKED_DATE >= '2017-02-19' & PLANNED_STOCKED_DATE <= '2018-02-24',
     !is.na(DC_NAME),
     !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
     !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
@@ -19,7 +21,7 @@ OTS_Master <- OTS_Master %>%
 
 SOT_Master <- SOT_Master %>% 
   filter(!grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed=FALSE)) %>%
-  filter(SHIP_CANCEL_DATE >= '2017-02-12' & SHIP_CANCEL_DATE <= '2018-02-17',
+  filter(SHIP_CANCEL_DATE >= '2017-02-19' & SHIP_CANCEL_DATE <= '2018-02-24',
          !grepl("Liberty Distribution Company", Parent_Vendor, ignore.case = TRUE),
          !grepl("dummy", Parent_Vendor, ignore.case = TRUE),
          MetricShipDate <= SOT_Data_Pulled) %>% 
@@ -91,5 +93,5 @@ OTS_GapInc <- OTS_Master %>%
 
 OTS <- split(OTS_viz_by_brand, f = OTS_viz_by_brand$ReportingBrand)
 
-save.image('.RData')
+save.image('viz.RData')
 

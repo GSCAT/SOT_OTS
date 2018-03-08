@@ -1,9 +1,11 @@
 ---
-title: "Shipped On Time to Contract / On Time To Stock Weekly Trend"
+title: "Shipped On Time / On Time To Stock Weekly Trend"
 output: 
   flexdashboard::flex_dashboard:
     orientation: row
     vertical_layout: scroll
+    includes:
+      in_header: Google_analytics.html
 ---
 
 ```{r setup, include=FALSE}
@@ -16,7 +18,8 @@ library(htmltools)
 library(knitr)
 
 # Load YTD SOT and OTS Master objects
-load("C:\\Users\\wenlu\\Documents\\SOTC-OTS\\Week 2\\.RData")
+#load("C:\\Users\\Ke2l8b1\\Documents\\Reporting\\SOT Weekly\\2018\\Week 4 2018\\Week_3.RData")
+load("..\\viz.RData")
 
 f1 <- list(
   
@@ -31,7 +34,7 @@ Gap Inc
 =======================================================================
 Row
 -----------------------------------------------------------------------
-### Gap Inc SOTC Weekly
+### Gap Inc SOT Weekly
 
 ```{r}
 plot_ly(SOT_GapInc) %>% 
@@ -82,7 +85,7 @@ Old Navy
 =======================================================================
 Row
 -----------------------------------------------------------------------
-### Old Navy North America SOTC Weekly
+### Old Navy North America SOT Weekly
 
 ```{r}
 plot_ly(SOT[['ON NA']]) %>%
@@ -128,7 +131,7 @@ plot_ly(OTS[['ON NA']]) %>%
 
 Row
 -----------------------------------------------------------------------
-### Old Navy International SOTC Weekly
+### Old Navy International SOT Weekly
 
 ```{r}
 plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'ON INTL')) %>%
@@ -177,7 +180,7 @@ GAP
 Row
 -----------------------------------------------------------------------
 
-### GAP North America SOTC Weekly
+### GAP North America SOT Weekly
 
 ```{r}
 plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'GAP NA')) %>%
@@ -224,7 +227,7 @@ plot_ly(subset(OTS_viz_by_brand,ReportingBrand == 'GAP NA')) %>%
 
 Row
 -----------------------------------------------------------------------
-### GAP International SOTC Weekly
+### GAP International SOT Weekly
 
 ```{r}
 plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'GAP INTL')) %>%
@@ -246,7 +249,7 @@ plot_ly(subset(SOT_viz_by_brand,ReportingBrand == 'GAP INTL')) %>%
          margin = list(t = 105, b = 105))
 ```
 
-### GAP International SOTC Weekly
+### GAP International SOT Weekly
 
 ```{r}
 plot_ly(subset(OTS_viz_by_brand,ReportingBrand == 'GAP INTL')) %>%
@@ -270,7 +273,7 @@ plot_ly(subset(OTS_viz_by_brand,ReportingBrand == 'GAP INTL')) %>%
 
 Row
 -----------------------------------------------------------------------
-### Gap Outlet North America SOTC Weekly
+### Gap Outlet North America SOT Weekly
 
 ```{r}
 plot_ly(SOT[['GO NA']]) %>%
@@ -316,7 +319,7 @@ plot_ly(OTS[['GO NA']]) %>%
 
 Row
 -----------------------------------------------------------------------
-### Gap Outlet International SOTC Weekly
+### Gap Outlet International SOT Weekly
 
 ```{r}
 plot_ly(SOT[['GO INTL']]) %>%
@@ -368,7 +371,7 @@ Banana Republic
 Row
 -----------------------------------------------------------------------
 
-### Banana Republic North America SOTC Weekly
+### Banana Republic North America SOT Weekly
 
 ```{r}
 plot_ly(SOT[['BR NA']]) %>%
@@ -415,7 +418,7 @@ plot_ly(OTS[['BR NA']]) %>%
 
 Row
 -----------------------------------------------------------------------
-### Banana Republic International SOTC Weekly
+### Banana Republic International SOT Weekly
 
 ```{r}
 plot_ly(SOT[['BR INTL']]) %>%
@@ -461,7 +464,7 @@ plot_ly(OTS[['BR INTL']]) %>%
 
 Row
 -----------------------------------------------------------------------
-### BRFS North America SOTC Weekly
+### BRFS North America SOT Weekly
 
 ```{r}
 plot_ly(SOT[['BRFS NA']]) %>%
@@ -511,7 +514,7 @@ Athleta
 Row
 -----------------------------------------------------------------------
 
-### Athleta SOTC Weekly
+### Athleta SOT Weekly
 
 ```{r}
 plot_ly(SOT[['ATHLETA']]) %>%
