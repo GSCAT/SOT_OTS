@@ -1,7 +1,7 @@
 # Install missing packages ----
 list.of.packages <- c("dplyr", "readr", "RODBC", "formattable", 
                       "rJava", "rChoiceDialogs", "ggvis", "tidyr", 
-                      "colorspace",  "mosaic", "yaml", "RJDBC", "DBI")
+                      "colorspace",  "mosaic", "yaml", "RJDBC", "DBI", "devtools")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -20,6 +20,7 @@ library(yaml)
 library(lubridate)
 library(RJDBC)
 library(DBI)
+library(devtools)
 
 # Start with clean environment ----
 # rm(list = ls())
@@ -39,6 +40,7 @@ if(!"credentials" %in% ls()){
 
 # Save Workspace ----
 # rm(credentials)
+# s <- session_info()
 # save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
 # load(file = paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep = .Platform$file.sep))
 
