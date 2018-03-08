@@ -138,27 +138,27 @@ SOT_Master_FOB %>% select(`NUMBER_SEQ`, `DEST_PO_ID`, `ReportingBrand`, `Categor
   filter(ShipCancelWeek == EOW) %>% 
   write_csv(path = paste(SOT_OTS_directory, "Impact_files", paste("SOT_MASTER_Impact_wk_", EOW, ".csv", sep = ""), sep = "\\"))
 
-# split outputs for GIS
-if(!dir.exists(file.path(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output"))) {dir.create(file.path(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output"))}
-SOT_MASTER_Impact <- SOT_Master_FOB %>% select(`NUMBER_SEQ`, `DEST_PO_ID`, `ReportingBrand`, `Category`, 
-                                  `Parent_Vendor`, `MetricShipDate`, `StockedDate`, `CountryOfOrigin`, 
-                                  `Lateness`, `ShipCancelMonth`, `DAYS_LATE`, `Vendor_Rank`, `Fiscal_Month`, 
-                                  `Quarter`, `FISCAL_YEAR`, `DC_GEO_LOC`, `MasterVendorID`, `AGT_DEPT_ID`, 
-                                  `AGENT_DEPT`, `OPR_BRD_STY_ID`, `Category_Source`, `SALES_TERMS_CODE`,
-                                  `SHIP_MODE_CD`, `ShipDateChoice`, `Trade_Lane_Type`, `ProgramType`, 
-                                  `BUYING_AGENT_GROUP`, `XFR_PT_COUNTRY_CODE`, `XFR_PT_PLACE_CODE`, 
-                                  `XFR_Point_Place`, `LOC_ABBR_NM`, `PROMPT_COUNTRY_ORIGIN`, 
-                                  `SHP_MODE_CATG_NM`, `Data_Pulled`, `Days.Before.Ship.Cancel`, 
-                                  `Planned OC (Derived)`, `SHP_RSN_TYP_DESC`, `Days Late to OC`, 
-                                  `SHIP_CANCEL_DATE`, `Contract_Ship_Cancel`, `Units`, `ShipCancelWeek`, 
-                                  `ACTUAL_ORIGIN_CONSOL_LCL_DATE`, `ACTUAL_LP_LCL_DATE`, `Days Anticipated vs Contract`, 
-                                  `LP vs Anticipated`, `Probable Failure`, `Sub Reason`, `Test by OC`, `Match?`) %>% 
-  arrange(`ShipCancelMonth`)
-
-SOT_MASTER_Impact %>% filter(ShipCancelMonth <= 6) %>%
-  write_csv(path = paste(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output", "SOT_MASTER_Impact_YTD_part1.csv", sep = "\\"))
-SOT_MASTER_Impact %>% filter(ShipCancelMonth > 6) %>%
-  write_csv(path = paste(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output", "SOT_MASTER_Impact_YTD_part2.csv", sep = "\\"))
+# # split outputs for GIS
+# if(!dir.exists(file.path(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output"))) {dir.create(file.path(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output"))}
+# SOT_MASTER_Impact <- SOT_Master_FOB %>% select(`NUMBER_SEQ`, `DEST_PO_ID`, `ReportingBrand`, `Category`, 
+#                                   `Parent_Vendor`, `MetricShipDate`, `StockedDate`, `CountryOfOrigin`, 
+#                                   `Lateness`, `ShipCancelMonth`, `DAYS_LATE`, `Vendor_Rank`, `Fiscal_Month`, 
+#                                   `Quarter`, `FISCAL_YEAR`, `DC_GEO_LOC`, `MasterVendorID`, `AGT_DEPT_ID`, 
+#                                   `AGENT_DEPT`, `OPR_BRD_STY_ID`, `Category_Source`, `SALES_TERMS_CODE`,
+#                                   `SHIP_MODE_CD`, `ShipDateChoice`, `Trade_Lane_Type`, `ProgramType`, 
+#                                   `BUYING_AGENT_GROUP`, `XFR_PT_COUNTRY_CODE`, `XFR_PT_PLACE_CODE`, 
+#                                   `XFR_Point_Place`, `LOC_ABBR_NM`, `PROMPT_COUNTRY_ORIGIN`, 
+#                                   `SHP_MODE_CATG_NM`, `Data_Pulled`, `Days.Before.Ship.Cancel`, 
+#                                   `Planned OC (Derived)`, `SHP_RSN_TYP_DESC`, `Days Late to OC`, 
+#                                   `SHIP_CANCEL_DATE`, `Contract_Ship_Cancel`, `Units`, `ShipCancelWeek`, 
+#                                   `ACTUAL_ORIGIN_CONSOL_LCL_DATE`, `ACTUAL_LP_LCL_DATE`, `Days Anticipated vs Contract`, 
+#                                   `LP vs Anticipated`, `Probable Failure`, `Sub Reason`, `Test by OC`, `Match?`) %>% 
+#   arrange(`ShipCancelMonth`)
+# 
+# SOT_MASTER_Impact %>% filter(ShipCancelMonth <= 6) %>%
+#   write_csv(path = paste(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output", "SOT_MASTER_Impact_YTD_part1.csv", sep = "\\"))
+# SOT_MASTER_Impact %>% filter(ShipCancelMonth > 6) %>%
+#   write_csv(path = paste(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output", "SOT_MASTER_Impact_YTD_part2.csv", sep = "\\"))
 
 save(SOT_Master_FOB, file = paste(SOT_OTS_directory, "Impact_files",  'SOT_Master_FOB.rda', sep = .Platform$file.sep))
 
