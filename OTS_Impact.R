@@ -56,6 +56,11 @@ by_logistics_reason_Inc <- OTS_Master_Logistics_Impact %>%
   group_by(OTP) %>%
   summarise("Units" = sum(Units))
 
+by_logistics_reason_Month <- OTS_Master_Logistics_Impact %>%
+  filter(Fiscal_Month == fis_month, Lateness == "Late") %>%
+  group_by(OTP) %>%
+  summarise("Units" = sum(Units))
+
 # For Impact email comments ----
 OTS_Impact_Comment_df <- OTS_Master_Logistics_Impact %>%
   filter(Week == EOW, Lateness == "Late") %>% 
@@ -214,6 +219,7 @@ OTS_by_DC <- OTS_Master_Logistics_Impact %>%
            `Other`, `Total`))
 
 write_csv(OTS_by_DC, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_DC.csv", sep = .Platform$file.sep))
+write_csv(OTS_Master_Logistics_Impact, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_Master_Logistics_Impact.csv", sep = .Platform$file.sep))
 
 
 # ####### Vendor
