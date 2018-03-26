@@ -50,7 +50,7 @@ if(!"credentials" %in% ls()){
 # sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 
 drv=JDBC("com.teradata.jdbc.TeraDriver","C:\\TeraJDBC__indep_indep.16.10.00.05\\terajdbc4.jar;C:\\TeraJDBC__indep_indep.16.10.00.05\\tdgssconfig.jar")
-conn=dbConnect(drv,"jdbc:teradata://10.107.56.31/LOGMECH=LDAP",credentials$my_uid, credentials$my_pwd)
+conn=dbConnect(drv,"jdbc:teradata://10.101.83.123/LOGMECH=LDAP",credentials$my_uid, credentials$my_pwd)
 dbGetQuery(conn, statement = "SELECT  * from dbc.dbcinfo;")
 gc() # Garbage collection (BASE)
 
