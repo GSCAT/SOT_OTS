@@ -39,3 +39,16 @@ README.md
 # Domino files
 .domino*
 dominostats.json
+
+# Local
+*.rtf
+*.rds
+Athleta.R
+Athleta_OTS_workaround.R
+Impact_INDC.R
+OTS_Master_Unit_fix.R
+Markdown/SOT_OTS_Process*
+Ord_QYT_analysis.R
+
+
+*.pdf
