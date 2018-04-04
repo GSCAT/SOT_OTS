@@ -88,7 +88,9 @@ gc()
 
 
 total_rows_SOT <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
-total_rows_OTS <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+# total_rows_OTS <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+total_rows_OTS <- dbGetQuery(conn, statement = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER where (LOC_ABBR_NM not in ('GUK', 'EFC', 'UK DC')  or
+		 (LOC_ABBR_NM  in ('GUK', 'EFC', 'UK DC') and PLANNED_STOCKED_DATE  not between DATE '2018-02-11' and  '2018-03-03')); ")
 total_rows_SOT
 total_rows_OTS
 date_check <- dbGetQuery(conn, statement = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
