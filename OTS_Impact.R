@@ -111,7 +111,8 @@ OTS_by_brand <- OTS_Master_Logistics_Impact %>%
             "Other" = sum(subset(Units, OTS %in% c("Other", NA) & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T)) %>% 
   #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
   right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec")) %>% 
-  mutate("Total" = rowSums(.[3:10])) %>% 
+  mutate("Total" = rowSums(select(.,"OTS %","Brand RD/Hold","Vendor","Int'l Transportation","Weather","Domestic Transportation",
+                                  "DC Stocking","Other"))) %>% 
   mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
   select(ReportingBrand, `Total_Units`,`OTS %`, `OTS Variance from Target`, `Brand RD/Hold`, `Vendor`,`Int'l Transportation`, `Weather`, `Domestic Transportation`, 
          `DC Stocking`, `Other`, `Total`)
@@ -158,7 +159,8 @@ OTS_by_category <- OTS_Master_Logistics_Impact %>%
             "Other" = sum(subset(Units, OTS %in% c("Other", NA) & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T)) %>% 
   #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
   right_join(as.data.frame(cat_vec), by = c("Category" = "cat_vec")) %>% 
-  mutate("Total" = rowSums(.[3:10])) %>% 
+  mutate("Total" = rowSums(select(.,"OTS %","Brand RD/Hold","Vendor","Int'l Transportation","Weather","Domestic Transportation",
+                                  "DC Stocking","Other"))) %>% 
   mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
   select(Category, `Total_Units`,`OTS %`, `OTS Variance from Target`, `Brand RD/Hold`, `Vendor`,`Int'l Transportation`, `Weather`, `Domestic Transportation`, 
          `DC Stocking`, `Other`, `Total`)
@@ -167,9 +169,8 @@ write_csv(OTS_by_category, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact"
 
 
 OTS_by_GapInc <- OTS_Master_Logistics_Impact %>% 
-  filter(Week == EOW) %>% 
   ungroup() %>% 
-  # group_by(Category) %>% 
+  filter(Week == EOW) %>% 
   summarise("OTS %" = sum(subset(Units, Lateness == "OnTime"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Brand RD/Hold" = sum(subset(Units, grepl("Brand", OTS, ignore.case = TRUE) & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Vendor" = sum(subset(Units, OTS == "Vendor" & Lateness == "Late"), na.rm = T)/ sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
@@ -179,9 +180,8 @@ OTS_by_GapInc <- OTS_Master_Logistics_Impact %>%
             "DC Stocking" = sum(subset(Units, OTS == "OT" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Other" = sum(subset(Units, OTS %in% c("Other", NA) & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Units" = sum(Units)) %>% 
-  #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
-  # right_join(as.data.frame(cat_vec), by = c("Category" = "cat_vec")) %>% 
-  mutate("Total" = rowSums(.[1:8])) %>% 
+  mutate("Total" = rowSums(select(.,"OTS %","Brand RD/Hold","Vendor","Int'l Transportation","Weather","Domestic Transportation",
+                                  "DC Stocking","Other"))) %>% 
   mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
   mutate("Entity" = "Gap Inc") %>% 
   select(c(Entity, `Units`, `OTS %`, 
@@ -210,7 +210,8 @@ OTS_by_DC <- OTS_Master_Logistics_Impact %>%
             "Units" = sum(Units)) %>%
   #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
   right_join(as.data.frame(DC_vec), by = c("LOC_ABBR_NM" = "DC_vec")) %>% 
-  mutate("Total" = rowSums(.[2:9])) %>% 
+  mutate("Total" = rowSums(select(.,"OTS %","Brand RD/Hold","Vendor","Int'l Transportation","Weather","Domestic Transportation",
+                                  "DC Stocking","Other"))) %>% 
   mutate("OTS Variance from Target" = `OTS %` -.90) %>%
   mutate("Blank" = '') %>% 
   select(c(LOC_ABBR_NM,`Blank`, `Units`, `OTS %`, 
