@@ -19,8 +19,8 @@ if(!"credentials" %in% ls()){
  
  # my_query <- readLines('test_sql3.sql')
  
- #my_query <- readLines("https://github.gapinc.com/raw/SRAA/EDW_IUF/master/Create%20SRAA_SAND%20EDW_IUF_YTD%20Prod.sql")
- my_query <- readLines("Create SRAA_SAND EDW_IUF_YTD Prod_test.sql", warn = FALSE)
+ my_query <- readLines("https://github.gapinc.com/raw/SRAA/EDW_IUF/master/Create%20SRAA_SAND%20EDW_IUF_YTD%20Prod.sql")
+ # my_query <- readLines("Create SRAA_SAND EDW_IUF_YTD Prod_test.sql", warn = FALSE)
  #sqlQuery(my_connect, query = readr::read_file('test_sql3.sql'))
  my_query <- paste(my_query, collapse = "","")
  my_query <- gsub("^\\s+|\\s+$", "", my_query) 
@@ -41,6 +41,7 @@ if(!"credentials" %in% ls()){
 system.time(lapply(my_query[[1]], FUN = iterate_sql))
  
  dbGetQuery(my_connect, statement = "SELECT data_pulled from SRAA_SAND.EDW_IUF_YTD sample 1;")
+ # dbGetQuery(my_connect, statement = "SELECT * from SRAA_SAND.EDW_IUF_YTD sample 1;")
  
  # my_query <- as.list(my_query[[1]][-1])
  # dbSendUpdate(my_connect, "DROP TABLE SRAA_SAND.EDW_IUF_YTD;")
