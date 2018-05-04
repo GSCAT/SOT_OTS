@@ -103,21 +103,28 @@ function (x)
 
 end_date <- "2017-04-01"
 
+# This fuction fails for dates in January ex. fiscal_454("2018-01-03") should return 2016-01-29
+
 fiscal_454 <- function (a_date)
 {
+  if (month(a_date)!= 1){
   y = year(a_date)
+  } else{
+    y = year(a_date) - 1
+  }
   # cat(y)
   Feb1st = as.Date(glue("{y}-02-01"))
   Sunday1 = Feb1st
   week_day = as.character(wday(Feb1st, label = TRUE, abbr = TRUE))
-  cat(week_day)
+  #cat(week_day)
   
+  # Loop till we reach Sunday
   if (week_day %in% c("Mon", "Tues", "Wed")) {
     # cat("Is it Wed? ", week_day == c("Wed"))
      while (week_day != "Sun") {
        week_day = as.character(wday(Sunday1 - 1, label = TRUE, abbr = TRUE))
        Sunday1 = Sunday1 - 1
-      cat("First Sunday is ", Sunday1)
+      #cat("First Sunday is ", Sunday1)
     # last Sunday in January is first day of year
     }
    }
@@ -125,13 +132,20 @@ fiscal_454 <- function (a_date)
   #     # First Sunday in February 
   while (week_day != "Sun") {
     week_day = as.character(wday(Sunday1 + 1, label = TRUE, abbr = TRUE))
-    Sunday1 = Sunday1 + 1
-    cat("First Sunday is ", Sunday1)
+    Sunday1 = Sunday1 - 1
+    
+    #change year to previous for Feb 1-3
+    
+    #cat("First Sunday is ", Sunday1)
   } 
     }
   else {}
-  return(Sunday1)
+  
+  return(as.Date(Sunday1))
 }
 
+test <- sapply(as.Date(Fiscal_cal$Fiscal_Date), FUN =fiscal_454)
+test <- as.Date(test, origin ='1970-01-01')
+test <- cbind(Fiscal_cal, test)
 
 
