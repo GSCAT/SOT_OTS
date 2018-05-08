@@ -1,0 +1,18 @@
+library(RODBC)
+
+# Connect to Access db
+# channel <- odbcConnectAccess2007("G:\\SF-LOGISTICS_METRICS\\Dashboards\\Databases\\IB Databases\\IB_Daily_2018.accdb", Driver='{Microsoft Access Driver (*.mdb, *.accdb)}')
+###############################################################################################
+####### MUST install Microsoft Access Database Engine for 64 bit if running 64 bit R ##########
+###############################################################################################
+channel <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=G:\\SF-LOGISTICS_METRICS\\Dashboards\\Databases\\IB Databases\\IB_Daily_2018.accdb")
+Transportation_Daily_IB <- sqlQuery( channel , paste ("select [Purchase Order Number], [PO Type], [Container Number1], [BL/AWB#1], [Vessel], [InDC Calc Method] from Daily_Tracker_2_0"))
+close(channel)
+
+channel <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=G:\\SF-LOGISTICS_METRICS\\Dashboards\\Databases\\IB Databases\\Monthly\\IB_Monthly_2018.accdb")
+Transportation_Month_IB <- sqlQuery( channel , paste ("select [Purchase Order Number], [PO Type], [Container Number1], [BL/AWB#1], [Vessel], [InDC Calc Method] from IB_Summary;"))
+close(channel)
+
+Transportation_data_combine <- rbind(Transportation_Daily_IB, Transportation_Month_IB)
+
+rm(list= c("Transportation_Daily_IB", "Transportation_Month_IB"))
