@@ -1,17 +1,18 @@
 library(readr)
 library(dplyr)
 
-### Get Weekly dashboard file from here: https://gapinc.app.box.com/folder/26906947114
-paste(SOT_OTS_directory, 
-      grep("Weekly", 
-           list.files(SOT_OTS_directory), 
-           value = TRUE), sep = .Platform$file.sep)
+# ### Get Weekly dashboard file from here: https://gapinc.app.box.com/folder/26906947114
+# paste(SOT_OTS_directory, 
+#       grep("Weekly", 
+#            list.files(SOT_OTS_directory), 
+#            value = TRUE), sep = .Platform$file.sep)
+# 
+# OTP_Logistics <- read.csv(paste(SOT_OTS_directory, 
+#                                  grep("Weekly", 
+#                                       list.files(SOT_OTS_directory), 
+#                                       value = TRUE), sep = .Platform$file.sep))
 
-OTP_Logistics <- read.csv(paste(SOT_OTS_directory, 
-                                 grep("Weekly", 
-                                      list.files(SOT_OTS_directory), 
-                                      value = TRUE), sep = .Platform$file.sep))
-
+source("Transportation_Data_Pull.R")
 
 cat_vec <- c("Wovens", "Knits", "Denim and Woven Bottoms", "Sweaters", "IP", "Accessories", "Category Other", "3P & Lic")
 brand_vec <- c("GAP NA", "BR NA", "ON NA", "GO NA", "BRFS NA", "GAP INTL", "BR INTL", "ON INTL", "GO INTL", "ATHLETA")
@@ -20,25 +21,25 @@ logistics_reason <- read_csv("https://github.gapinc.com/raw/SRAA/Static_tables/m
 
 dir.create((file.path(SOT_OTS_directory, "Impact_files/OTS_Impact")))
 
-OTP_Logistics_sub <- OTP_Logistics %>% 
-  select(Destination.PO.DPO.NBR, "Logistics_Impact"= `INDC.2`) %>% 
+OTP_Logistics_sub <- Transportation_data_combine %>% 
+  select(`Purchase Order Number`, "Logistics_Impact"= `INDC`) %>% 
   # filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>%
-  group_by(Destination.PO.DPO.NBR) %>%
+  group_by(`Purchase Order Number`) %>%
   summarise("Logistics_Impact" = first(`Logistics_Impact`)) %>%
   droplevels()
 
-OTP_Logistics$Forecast.Units...PO.DPO <- as.numeric(OTP_Logistics$Forecast.Units...PO.DPO)
+# Transportation_data_combine$Forecast.Units...PO.DPO <- as.numeric(Transportation_data_combine$Forecast.Units...PO.DPO)
 
-by_logistics_reason <- OTP_Logistics %>% 
-  filter(FiscalWeek == EOW) %>%
-  select(Forecast.Units...PO.DPO,"Logistics_Impact"= `INDC.2`) %>% 
+by_logistics_reason <- Transportation_data_combine %>% 
+  # filter(FiscalWeek == EOW) %>%
+  select(`Total Shipped Qty`,"Logistics_Impact"= `INDC`) %>% 
   group_by(`Logistics_Impact`) %>%
-  summarise("Units" = sum(Forecast.Units...PO.DPO)) %>%
+  summarise("Units" = sum(`Total Shipped Qty`)) %>%
   mutate("Percentage" = Units / sum(Units)) %>%
   arrange(desc(`Units`))
   
 OTS_Master_Logistics_Impact <- OTS_Master %>% 
-  left_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Destination.PO.DPO.NBR")) %>% 
+  left_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Purchase Order Number")) %>% 
   left_join(logistics_reason, by = c("Logistics_Impact" = "Logistics_Impact"))
 
 OTS_Master_Logistics_Impact %>% 
