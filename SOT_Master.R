@@ -168,22 +168,22 @@ OTS_Data_Pulled
 SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
 OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
 
-dir.create((file.path(SOT_OTS_directory, "Summary_Files")))
-dir.create((file.path(SOT_OTS_directory, "RAW_Files")))
-dir.create((file.path(SOT_OTS_directory, "RAW_Objects")))
-dir.create((file.path(SOT_OTS_directory, "Clean_Files")))
-dir.create((file.path(SOT_OTS_directory, "Master_Files")))
+dir.create((file.path("Model_Output")))
+output_dir <- "Model_Output"
+dir.create((file.path(output_dir, "Summary_Files")))
+dir.create((file.path(output_dir, "RAW_Files")))
+dir.create((file.path(output_dir, "RAW_Objects")))
+dir.create((file.path(output_dir, "Clean_Files")))
+dir.create((file.path(output_dir, "Master_Files")))
 
-write_csv(SOT_Master_Summary, path = paste(SOT_OTS_directory, "Summary_Files", paste('SOT_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
-write_csv(OTS_Master_Summary, path = paste(SOT_OTS_directory, "Summary_Files", paste('OTS_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
 
-# Write Raw files to .csv ----
-write_csv(SOT_Master, path = paste(SOT_OTS_directory, "RAW_Files",  'SOT_Master_Raw.csv', sep = '/' ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory, "RAW_Files",  'OTS_Master_Raw.csv', sep = '/' ))
+# # Write Raw files to .csv ----
+# write_csv(SOT_Master, path = paste(output_dir, "RAW_Files",  'SOT_Master_Raw.csv', sep = '/' ))
+# write_csv(OTS_Master, path = paste(output_dir, "RAW_Files",  'OTS_Master_Raw.csv', sep = '/' ))
 
 # Save Raw objects ----
-save(SOT_Master, file = paste(SOT_OTS_directory, "RAW_Objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
-save(OTS_Master, file = paste(SOT_OTS_directory, "RAW_Objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+save(SOT_Master, file = paste(output_dir, "RAW_Objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
+save(OTS_Master, file = paste(output_dir, "RAW_Objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
  
 # Save Unmeasured subset ----
 SOT_Master_Unmeasured <- SOT_Master %>% 
@@ -195,10 +195,10 @@ SOT_Master_Unmeasured <- SOT_Master %>%
          Lateness == "Unmeasured") %>% 
   droplevels()
 
-save(SOT_Master_Unmeasured, file = paste(SOT_OTS_directory, 
+save(SOT_Master_Unmeasured, file = paste(output_dir, 
                                          "RAW_Objects",  'SOT_Master_Unmeasured_object.rtf', 
                                          sep = .Platform$file.sep))
-write_csv(SOT_Master_Unmeasured, path = paste(SOT_OTS_directory, "Master_Files",  
+write_csv(SOT_Master_Unmeasured, path = paste(output_dir, "Master_Files",  
                                               paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), 
                                               sep = .Platform$file.sep ))
 
@@ -239,26 +239,28 @@ OTS_Master <- OTS_Master %>%
   arrange(desc(DEST_PO_ID))
 
 
-# Write out the cleaned master files ----
-write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean_YTD.csv', sep = .Platform$file.sep ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean_YTD.csv', sep = .Platform$file.sep ))
 
 # Save Clean objects for visualization ----
-save(SOT_Master, file = paste(SOT_OTS_directory, "Clean_Files",  'SOT_Master_clean_object.rtf', sep = .Platform$file.sep))
-save(OTS_Master, file = paste(SOT_OTS_directory, "Clean_Files",  'OTS_Master_clean_object.rtf', sep = .Platform$file.sep ))
+save(SOT_Master, file = paste(output_dir, "Clean_Files",  'SOT_Master_clean_object.rtf', sep = .Platform$file.sep))
+save(OTS_Master, file = paste(output_dir, "Clean_Files",  'OTS_Master_clean_object.rtf', sep = .Platform$file.sep ))
  
-SOT_Master %>% filter(ShipCancelWeek == EOW) %>% write_csv( path = paste(SOT_OTS_directory, "Clean_Files",  paste('SOT_Master_clean_wk', EOW, '.csv', sep = ""), sep = .Platform$file.sep ))
-OTS_Master %>% filter(Week == EOW) %>% write_csv( path = paste(SOT_OTS_directory, "Clean_Files",  paste('OTS_Master_clean_wk', EOW, '.csv', sep = ""), sep = .Platform$file.sep ))
+SOT_Master %>% filter(ShipCancelWeek == EOW) %>% write_csv( path = paste(output_dir, "Clean_Files",  paste('SOT_Master_clean_wk', EOW, '.csv', sep = ""), sep = .Platform$file.sep ))
+OTS_Master %>% filter(Week == EOW) %>% write_csv( path = paste(output_dir, "Clean_Files",  paste('OTS_Master_clean_wk', EOW, '.csv', sep = ""), sep = .Platform$file.sep ))
 
 
 # Create/write Metadata for Week subset ----
 SOT_Master_Summary_curr_week <- SOT_Master %>% filter(ShipCancelWeek ==EOW) %>% summary() %>% as.data.frame() 
 OTS_Master_Summary_curr_week <- OTS_Master %>% filter(Week ==EOW) %>% summary() %>% as.data.frame() 
+write_csv(SOT_Master_Summary, path = paste(output_dir, "Summary_Files", paste('SOT_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
+write_csv(OTS_Master_Summary, path = paste(output_dir, "Summary_Files", paste('OTS_Master_RAW_Metadata_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
 
+# Write out the cleaned master files ----
+write_csv(SOT_Master, path = paste(output_dir, "Clean_Files",  'SOT_Master_clean_YTD.csv', sep = .Platform$file.sep ))
+write_csv(OTS_Master, path = paste(output_dir, "Clean_Files",  'OTS_Master_clean_YTD.csv', sep = .Platform$file.sep ))
 write_csv(as.data.frame(SOT_Master_Summary_curr_week), 
-          path = paste(SOT_OTS_directory, "Summary_Files",  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
+          path = paste(output_dir, "Summary_Files",  paste('SOT_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
 write_csv(as.data.frame(OTS_Master_Summary_curr_week), 
-          path = paste(SOT_OTS_directory, "Summary_Files",  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
+          path = paste(output_dir, "Summary_Files",  paste('OTS_Master_Metadata_curr_week', EOW, '.csv',sep = ""), sep = .Platform$file.sep ))
 
 # Create Output Tables ----
 
@@ -327,19 +329,19 @@ SOT_by_Vendor <- SOT_Master %>%
   droplevels()
 
 # Output Tables to .csv ----
-write_csv(OTS_by_Category, path = paste(SOT_OTS_directory,  'OTS_by_Category.csv', sep = .Platform$file.sep ))
-write_csv(OTS_by_Vendor, path = paste(SOT_OTS_directory,  'OTS_by_Vendor.csv', sep = .Platform$file.sep ))
+write_csv(OTS_by_Category, path = paste(output_dir,  'OTS_by_Category.csv', sep = .Platform$file.sep ))
+write_csv(OTS_by_Vendor, path = paste(output_dir,  'OTS_by_Vendor.csv', sep = .Platform$file.sep ))
 
-write_csv(SOT_by_Category, path = paste(SOT_OTS_directory,  'SOT_by_Category.csv', sep = .Platform$file.sep ))
-write_csv(SOT_by_Vendor, path = paste(SOT_OTS_directory,  'SOT_by_Vendor.csv', sep = .Platform$file.sep ))
+write_csv(SOT_by_Category, path = paste(output_dir,  'SOT_by_Category.csv', sep = .Platform$file.sep ))
+write_csv(SOT_by_Vendor, path = paste(output_dir,  'SOT_by_Vendor.csv', sep = .Platform$file.sep ))
 
 # YTD Masters
-write_csv(SOT_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep ))
-write_csv(OTS_Master, path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep))
+write_csv(SOT_Master, path = paste(output_dir, "Master_Files",  paste('SOT_Master_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep ))
+write_csv(OTS_Master, path = paste(output_dir, "Master_Files",  paste('OTS_Master_WK', EOW, '_YTD.csv',sep = ""), sep = .Platform$file.sep))
 
 # 7 day Masters
-write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
-write_csv(subset(OTS_Master, Week == EOW), path = paste(SOT_OTS_directory, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
+write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(output_dir, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
+write_csv(subset(OTS_Master, Week == EOW), path = paste(output_dir, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 # }
 # #### Save SOT and OTS Master objects to Monthly dir for reporting ----
 # Monthly_directory <- choose_file_directory()
