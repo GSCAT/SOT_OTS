@@ -169,7 +169,8 @@ SOT_Master_Summary <- as.data.frame(summary(SOT_Master))
 OTS_Master_Summary <- as.data.frame(summary(OTS_Master))
 
 dir.create((file.path("Model_Output")))
-output_dir <- "Model_Output"
+# output_dir <- "Model_Output"
+output_dir <- SOT_OTS_directory
 dir.create((file.path(output_dir, "Summary_Files")))
 dir.create((file.path(output_dir, "RAW_Files")))
 dir.create((file.path(output_dir, "RAW_Objects")))
