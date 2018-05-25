@@ -23,6 +23,7 @@ $RECYCLE.BIN/
 *.xlsx
 *.accdb
 .Rproj.user
+*.Rproj
 
 *.RData
 .Rhistory
