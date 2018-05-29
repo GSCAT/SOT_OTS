@@ -1,7 +1,7 @@
 # Install missing packages ----
 list.of.packages <- c("dplyr", "readr", "RODBC", "formattable", 
                       "rJava", "rChoiceDialogs", "ggvis", "tidyr", 
-                      "colorspace",  "mosaic", "yaml", "RJDBC", "DBI", "devtools")
+                      "colorspace",  "mosaic", "yaml", "RJDBC", "DBI", "devtools", "ggthemes", "DT")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
