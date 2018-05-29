@@ -84,7 +84,7 @@ From R Studio we run 3 .R scripts. These scripts contain all the code needed to 
 ##### List of Files to Run
 
 -   *SOT\_Master.R*
--   *LPvsOC.R*
+-   *Transportation\_Impact/LPvsOC.R*
 -   *Parent\_Vendor\_outputs.R*
 -   *Unmeasured.R*
 -   *OTS\_Impact.R*
