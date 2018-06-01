@@ -163,7 +163,7 @@ The two scripts described above write csv files to a folder called "Impact\_file
 
 From R Studio - open OTS\_Impact.R
 
-1.  Download the newest Weekly Dashboard from: https://gapinc.app.box.com/folder/26906947114. Save as CSV file.
+1.  Download the newest Weekly Dashboard from: https://gapinc.box.com/s/b7fz24t96hx7tmzq8fdbhmtjz7j62wgz. Save as CSV file.
 2.  Run script 
 
 #### OTS Impact PDF
