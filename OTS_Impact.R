@@ -21,22 +21,28 @@ logistics_reason <- read_csv("https://github.gapinc.com/raw/SRAA/Static_tables/m
 
 dir.create((file.path(SOT_OTS_directory, "Impact_files/OTS_Impact")))
 
+# rearrange factor levels to "OT" at end
+Transportation_data_combine$`INDC+2` <- factor(Transportation_data_combine$`INDC+2`, 
+                                               levels(Transportation_data_combine$`INDC+2`)[c(1:14, 16:22, 15)])
+# Arrange dataframe accouding to custom factor levels (i.e. "OT" last).
+Transportation_data_combine <- Transportation_data_combine %>% arrange(`INDC+2`)
+
 OTP_Logistics_sub <- Transportation_data_combine %>% 
-  select(`Purchase Order Number`, "Logistics_Impact"= `INDC`) %>% 
+  select(`Purchase Order Number`, "Logistics_Impact"= `INDC+2`) %>% 
   # filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>%
   group_by(`Purchase Order Number`) %>%
   summarise("Logistics_Impact" = first(`Logistics_Impact`)) %>%
   droplevels()
 
 # Transportation_data_combine$Forecast.Units...PO.DPO <- as.numeric(Transportation_data_combine$Forecast.Units...PO.DPO)
-
-by_logistics_reason <- Transportation_data_combine %>% 
-  # filter(FiscalWeek == EOW) %>%
-  select(`Total Shipped Qty`,"Logistics_Impact"= `INDC`) %>% 
-  group_by(`Logistics_Impact`) %>%
-  summarise("Units" = sum(`Total Shipped Qty`)) %>%
-  mutate("Percentage" = Units / sum(Units)) %>%
-  arrange(desc(`Units`))
+# 
+# by_logistics_reason <- Transportation_data_combine %>% 
+#   # filter(FiscalWeek == EOW) %>%
+#   select(`Total Shipped Qty`,"Logistics_Impact"= `INDC+2`) %>% 
+#   group_by(`Logistics_Impact`) %>%
+#   summarise("Units" = sum(`Total Shipped Qty`)) %>%
+#   mutate("Percentage" = Units / sum(Units)) %>%
+#   arrange(desc(`Units`))
   
 OTS_Master_Logistics_Impact <- OTS_Master %>% 
   left_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Purchase Order Number")) %>% 
@@ -222,6 +228,12 @@ OTS_by_DC <- OTS_Master_Logistics_Impact %>%
 
 write_csv(OTS_by_DC, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_DC.csv", sep = .Platform$file.sep))
 write_csv(OTS_Master_Logistics_Impact, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_Master_Logistics_Impact.csv", sep = .Platform$file.sep))
+
+# Save Workspace ----
+ rm(credentials)
+s <- session_info()
+save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
+# load(file = paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep = .Platform$file.sep))
 
 
 # ####### Vendor

@@ -59,7 +59,7 @@ if(!dir.exists(file.path(SOT_OTS_directory, "Impact_files"))) {dir.create(file.p
 # Subset of SOT_Master_FOB v2 ----
 SOT_Master_FOB <- SOT_Master %>% 
   droplevels() %>% 
-  left_join(TTP_table, by = c("XFR_Point_Place" = "TP.Place", "DC_GEO_LOC" = "Geo.Description")) %>% 
+  left_join(TTP_table, by = c("XFR_Point_Place" = "Transfer.Point", "DC_GEO_LOC" = "Geo.Description", "SHIP_MODE_CD" = "Ship.Mode")) %>% 
   mutate("Planned OC (Derived)" = Contract_Ship_Cancel - Days.Before.Ship.Cancel,
          "Days Late to OC" = ACTUAL_ORIGIN_CONSOL_LCL_DATE -`Planned OC (Derived)`,
          "Days Anticipated vs Contract" = SHIP_CANCEL_DATE - Contract_Ship_Cancel,

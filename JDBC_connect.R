@@ -64,3 +64,9 @@ save(SOT_Master_JDBC, file = "SOT_Master_JDBC_wk44.rds")
 save(OTS_Master, file = "OTS_Master_wk44.rds")
 save(OTS_Master_JDBC, file = "OTS_Master_JDBC_wk44.rds")
 
+
+test_sql2 <- dbSendUpdate(conn, statement = "drop table SRAA_SAND.test2;")
+test_sql2 <- dbSendUpdate(conn, statement = read_file('test_sql.sql'))
+test_sql2 <- dbSendUpdate(conn, statement = read_file('test_sql2.sql'))
+
+

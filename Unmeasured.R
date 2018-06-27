@@ -44,10 +44,20 @@ d <- SOT_Master_Unmeasured %>%
   scale_x_continuous(breaks = seq(0, EOW, 2)) + 
   scale_y_continuous(labels = scales::comma, breaks = seq(0, 10000000, 200000)) +
   theme(axis.text.x = element_text(angle = 90)) +
-  ggtitle("Unmeasured Units for Gap Inc", subtitle = paste("(by Fiscal Week and Brand through Week ", "31", ")", sep = "") )
+  ggtitle("Unmeasured Units for Gap Inc", subtitle = paste("(by Fiscal Week and Brand through Week ", EOW, ")", sep = "") )
 
 plot(d)
 save(d, file = paste(SOT_OTS_directory, "RAW_Objects",  'by_Week_Brand_Plot_object.rda', sep = .Platform$file.sep))
+
+
+Unmeasured_by_Vendor <- SOT_Master_Unmeasured %>% 
+  group_by(Parent_Vendor, ShipCancelWeek) %>% 
+  filter(ShipCancelWeek == EOW, `FISCAL_YEAR` == fis_yr) %>% 
+  summarise("Unmeasured_Units" = floor(sum(`Units`, na.rm = T))) %>% 
+  arrange(desc(Unmeasured_Units))
+
+
+  # right_join(as.data.frame(brand_vec), by = c("ReportingBrand" = "brand_vec"))
 
 # Don't run below here ----
 # formattable(Unmeasured_by_brand, list(Unmeasured_Units = color_bar("lightblue")))
