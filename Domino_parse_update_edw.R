@@ -1,6 +1,9 @@
 library(RODBC)
 library(yaml)
 library(RJDBC)
+library(glue)
+library(lubridate)
+
 
 # # For username and password ----
 # if(!"credentials" %in% ls()){
@@ -26,13 +29,35 @@ dbGetQuery(my_connect, statement = "SELECT  * from dbc.dbcinfo;")
 my_query <- readLines("https://github.gapinc.com/raw/SRAA/EDW_IUF/master/Create%20SRAA_SAND%20EDW_IUF_YTD%20Prod.sql")
 # my_query <- readLines("Create SRAA_SAND EDW_IUF_YTD Prod_test.sql", warn = FALSE)
 #sqlQuery(my_connect, query = readr::read_file('test_sql3.sql'))
+
+
+start_date <- date(today()) - 379
+
+while ((weekdays(start_date) != "Sunday")) {
+  start_date <- start_date - 1
+}
+end_date <- date(today())
+
+while ((weekdays(end_date) != "Saturday")) {
+  end_date <- end_date - 1
+}
+
+
 my_query <- paste(my_query, collapse = "","")
 my_query <- gsub("^\\s+|\\s+$", "", my_query) 
 my_query <- gsub("\t", " ", my_query) 
 my_query <- gsub("\n", " ", my_query) 
 # my_query <- gsub(";\\*/", "\\*/;", my_query) 
 my_query <- gsub("/\\*.*?\\*/", "", my_query) 
-# my_query <- gsub("--", "-- \n", my_query) 
+# my_query <- gsub("--", "-- \n", my_query)
+
+# replace where statement that bounds the query
+pattern = "where\\s*\\(\\s*\\(\\s*a11\\.SHIP_CANCEL_DATE\\s*between\\s*DATE\\s*'.*?'\\s*and\\s*CURRENT_DATE\\s*\\)\\s*or\\s*\\(\\s*a11\\.PLANNED_STOCKED_DATE\\s*between\\s*DATE\\s*'.*?'\\s*and\\s*CURRENT_DATE\\s*\\)\\s*\\)"
+replacement = glue("where ((a11.SHIP_CANCEL_DATE between DATE '{start_date}' and CURRENT_DATE ) or (a11.PLANNED_STOCKED_DATE between DATE '{start_date}' and CURRENT_DATE ))")
+
+my_query <- sub(pattern = pattern, 
+                replacement = replacement, x = my_query)
+
 my_query <- strsplit(my_query, split = ";")
 
 
