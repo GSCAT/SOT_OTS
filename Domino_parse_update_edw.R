@@ -3,6 +3,7 @@ library(yaml)
 library(RJDBC)
 library(glue)
 library(lubridate)
+library(ggplot2)
 
 
 # # For username and password ----
@@ -72,6 +73,12 @@ system.time(lapply(my_query[[1]], FUN = iterate_sql))
 dbGetQuery(my_connect, statement = "SELECT data_pulled from SRAA_SAND.EDW_IUF_YTD sample 1;")
 # dbGetQuery(my_connect, statement = "SELECT * from SRAA_SAND.EDW_IUF_YTD sample 1;")
 
+dbGetQuery(my_connect, statement = "SELECT BRD_NM, MDSE_SEAS_TYP_NM, count(*) as DPO_COUNT from SRAA_SAND.EDW_IUF_YTD group by BRD_NM, MDSE_SEAS_TYP_NM;") -> plot_data
+
+plot_png <- ggplot(plot_data, aes(x= BRD_NM, y= DPO_COUNT)) + geom_point(aes(color = MDSE_SEAS_TYP_NM))
+png("plot_png.png")
+plot_png
+dev.off()
 # my_query <- as.list(my_query[[1]][-1])
 # dbSendUpdate(my_connect, "DROP TABLE SRAA_SAND.EDW_IUF_YTD;")
 
