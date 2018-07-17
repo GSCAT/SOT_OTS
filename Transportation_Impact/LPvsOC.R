@@ -138,6 +138,11 @@ SOT_Master_FOB %>% select(`NUMBER_SEQ`, `DEST_PO_ID`, `ReportingBrand`, `Categor
   filter(ShipCancelWeek == EOW) %>% 
   write_csv(path = paste(SOT_OTS_directory, "Impact_files", paste("SOT_MASTER_Impact_wk_", EOW, ".csv", sep = ""), sep = "\\"))
 
+RCurl::ftpUpload(paste(SOT_OTS_directory, "Impact_files", "SOT_MASTER_Impact_YTD.csv", sep = "\\"),
+                 "ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/OTS_SOT%20Raw%20Data/SOT_MASTER_Impact_YTD.csv")
+RCurl::ftpUpload(paste(SOT_OTS_directory, "Impact_files", paste("SOT_MASTER_Impact_wk_", EOW, ".csv", sep = ""), sep = "\\"),
+                 paste("ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/OTS_SOT%20Raw%20Data", paste("SOT_MASTER_Impact_wk_", EOW, ".csv", sep = ""), sep = .Platform$file.sep))
+
 # # split outputs for GIS
 # if(!dir.exists(file.path(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output"))) {dir.create(file.path(SOT_OTS_directory, "Impact_files", "GIS_Splits_Output"))}
 # SOT_MASTER_Impact <- SOT_Master_FOB %>% select(`NUMBER_SEQ`, `DEST_PO_ID`, `ReportingBrand`, `Category`, 

@@ -54,6 +54,8 @@ conn=dbConnect(drv,"jdbc:teradata://10.101.83.123/LOGMECH=LDAP",credentials$my_u
 dbGetQuery(conn, statement = "SELECT  * from dbc.dbcinfo;")
 gc() # Garbage collection (BASE)
 
+dbGetQuery(conn, statement = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+
 jdbc_fetch <- dbSendQuery(conn, "SELECT * FROM SRAA_SAND.VIEW_SOT_MASTER")
 
 chunk <-  dbFetch(jdbc_fetch, 1)
@@ -202,6 +204,9 @@ save(SOT_Master_Unmeasured, file = paste(output_dir,
 write_csv(SOT_Master_Unmeasured, path = paste(output_dir, "Master_Files",  
                                               paste('SOT_Master_Unmeasured_WK', EOW, '_YTD.csv',sep = ""), 
                                               sep = .Platform$file.sep ))
+
+RCurl::ftpUpload(paste(SOT_OTS_directory, "Master_Files", paste("SOT_MASTER_Unmeasured_WK", EOW, "_YTD.csv", sep = ""), sep = "\\"),
+                 paste("ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/OTS_SOT%20Raw%20Data", paste("SOT_Master_Unmeasured_WK", EOW, "_YTD.csv", sep = ""), sep = .Platform$file.sep))
 
 # Scrub Noise from Master Objects ----
 OTS_Master <- OTS_Master %>% 
