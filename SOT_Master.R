@@ -348,6 +348,11 @@ write_csv(OTS_Master, path = paste(output_dir, "Master_Files",  paste('OTS_Maste
 # 7 day Masters
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(output_dir, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(output_dir, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
+
+source(paste("Transportation_Impact", "LPvsOC.R", sep = .Platform$file.sep))
+source("Parent_Vendor_outputs.R")
+source("Unmeasured.R")
+source("OTS_Impact.R")
 # }
 # #### Save SOT and OTS Master objects to Monthly dir for reporting ----
 # Monthly_directory <- choose_file_directory()
