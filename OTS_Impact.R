@@ -207,7 +207,8 @@ OTS_by_GapInc <- OTS_Master_Logistics_Impact %>%
             "Weather" = sum(subset(Units, OTS == "Extreme Weather" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Domestic Transportation" = sum(subset(Units, OTS == "Destination" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "DC Stocking" = sum(subset(Units, OTS == "OT" & Lateness == "Late" & SHIP_CANCEL_DATE == Contract_Ship_Cancel ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
-            "Other" = sum(subset(Units, OTS %in% c("Other", NA, "OT") & Lateness == "Late" & SHIP_CANCEL_DATE != Contract_Ship_Cancel ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T)) %>% 
+            "Other" = sum(subset(Units, OTS %in% c("Other", NA, "OT") & Lateness == "Late" & SHIP_CANCEL_DATE != Contract_Ship_Cancel ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Units" = sum(Units)) %>% 
   mutate("Total" = rowSums(select(.,"OTS %","Brand RD/Hold","Vendor","Int'l Transportation","Weather","Domestic Transportation",
                                   "DC Stocking","Other"))) %>% 
   mutate("OTS Variance from Target" = `OTS %` -.90) %>% 
@@ -235,7 +236,8 @@ OTS_by_DC <- OTS_Master_Logistics_Impact %>%
             "Weather" = sum(subset(Units, OTS == "Extreme Weather" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "Domestic Transportation" = sum(subset(Units, OTS == "Destination" & Lateness == "Late"), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
             "DC Stocking" = sum(subset(Units, OTS == "OT" & Lateness == "Late" & SHIP_CANCEL_DATE == Contract_Ship_Cancel ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
-            "Other" = sum(subset(Units, OTS %in% c("Other", NA, "OT") & Lateness == "Late" & SHIP_CANCEL_DATE != Contract_Ship_Cancel ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T)) %>% 
+            "Other" = sum(subset(Units, OTS %in% c("Other", NA, "OT") & Lateness == "Late" & SHIP_CANCEL_DATE != Contract_Ship_Cancel ), na.rm = T)/sum(subset(Units, Lateness != "Undetermined"), na.rm = T),
+            "Units" = sum(Units)) %>% 
   
   #"Other" = sum(subset(Units, !(Logistics_Impact %in% c("")))) %>%
   right_join(as.data.frame(DC_vec), by = c("LOC_ABBR_NM" = "DC_vec")) %>% 
