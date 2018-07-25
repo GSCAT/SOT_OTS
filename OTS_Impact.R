@@ -22,13 +22,19 @@ logistics_reason <- read_csv("https://github.gapinc.com/raw/SRAA/Static_tables/m
 dir.create((file.path(SOT_OTS_directory, "Impact_files/OTS_Impact")))
 
 # rearrange factor levels to "OT" at end
-Transportation_data_combine$`INDC+2` <- factor(Transportation_data_combine$`INDC+2`, 
-                                               levels(Transportation_data_combine$`INDC+2`)[c(1:14, 16:22, 15)])
+# Transportation_data_combine$`INDC+2` <- factor(Transportation_data_combine$`INDC+2`, 
+#                                                levels(Transportation_data_combine$`INDC+2`)[c(1:13, 15:22, 14)])
+
+# Reorder levels so that "OT" is last. This is to aid in the order that error codes are picked up.
+Trans_levels = c("Air FF", "Consolidator", "Customs", "Dray", "Extreme Weather", "ITO", "ITO - Delay", "ITO - Misload", "Linehaul", "Linehaul - Intl", "Model Error", "No Model", "On Hold", "Port", "Redirect", "Vendor", "Vendor - Not Shipped", "Vessel", "Deconsol", "GTOC", "Plane", "OT")
+Transportation_data_combine$`INDC` <- factor(Transportation_data_combine$`INDC`,
+                                               levels = c(Trans_levels))
+
 # Arrange dataframe accouding to custom factor levels (i.e. "OT" last).
-Transportation_data_combine <- Transportation_data_combine %>% arrange(`INDC+2`)
+Transportation_data_combine <- Transportation_data_combine %>% arrange(`INDC`)
 
 OTP_Logistics_sub <- Transportation_data_combine %>% 
-  select(`Purchase Order Number`, "Logistics_Impact"= `INDC+2`) %>% 
+  select(`Purchase Order Number`, "Logistics_Impact"= `INDC`) %>% 
   # filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>%
   group_by(`Purchase Order Number`) %>%
   summarise("Logistics_Impact" = first(`Logistics_Impact`)) %>%
