@@ -45,9 +45,58 @@ if(!"credentials" %in% ls()){
 # load(file = paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep = .Platform$file.sep))
 
 # Create RODBC connection ----
-# my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
-# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-# sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
+sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+
+total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
+
+total_rows_SOT
+total_rows_OTS
+date_check
+max_stock_date
+
+
+
+if(date_check[[1]] == Sys.Date()) {
+  test_exists = 1
+  paste("Latest refresh is ", date_check[[1]], "Proceding to query")
+  # Create Master Objects ----
+  system.time(SOT_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+
+  system.time(OTS_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+} else if (readline("Data is old. Would you like to continue? Y or N: ") == 'Y') {
+  test_exists = 1
+  paste("Latest refresh is", Sys.Date() - date_check[[1]], "days old. Continuing anyway")
+  # Create Master Objects ----
+  system.time(SOT_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+
+  system.time(OTS_Master <- sqlQuery(my_connect,
+                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+  
+} else {
+  test_exists = 0
+  paste("Aborting")
+}
+
+## Run below load statements if restoring from a previously saved object stored in the working directory. 
+## Skip to "Create Master Objects" if pulling fresh data ----
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
+# load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
+
+if ( test_exists == 1){
+  paste("Data has been pulled")
+}
+# Close connection ----
+close(my_connect)
+
+# Use JDBC Connection----
 
 drv=JDBC("com.teradata.jdbc.TeraDriver","C:\\TeraJDBC__indep_indep.16.10.00.05\\terajdbc4.jar;C:\\TeraJDBC__indep_indep.16.10.00.05\\tdgssconfig.jar")
 conn=dbConnect(drv,"jdbc:teradata://10.101.83.123/LOGMECH=LDAP",credentials$my_uid, credentials$my_pwd)
@@ -99,7 +148,7 @@ date_check <- dbGetQuery(conn, statement = "select Data_Pulled from SRAA_SAND.VI
 max_stock_date <-  dbGetQuery(conn, statement = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
 dbDisconnect(conn)
-# Convert Dates and factors ----
+# Convert Dates and factors
 
 # SOT_Master[, c(6:7, 9:12, 41:43)] <- SOT_Master[, c(6:7, 9:12, 41:43)] %>% mutate_all(funs(as.Date(.)))
 SOT_Master[ , c('Contract_Ship_Cancel','SHIP_CANCEL_DATE','MetricShipDate','ACTUAL_ORIGIN_CONSOL_LCL_DATE',
@@ -118,6 +167,7 @@ OTS_Master[, c('Contract_Ship_Cancel','cur_in_dc_dt','PLANNED_STOCKED_DATE','inD
 # date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
 # max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
 
+# After JDBC or ODBC PULL----
 date_check
 max_stock_date
 
@@ -349,10 +399,21 @@ write_csv(OTS_Master, path = paste(output_dir, "Master_Files",  paste('OTS_Maste
 write_csv(subset(SOT_Master, ShipCancelWeek == EOW), path = paste(output_dir, "Master_Files",  paste('SOT_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 write_csv(subset(OTS_Master, Week == EOW), path = paste(output_dir, "Master_Files",  paste('OTS_Master_WK', EOW, '.csv',sep = ""), sep = .Platform$file.sep))
 
+# Process for 3PL. Uploads a file to ftp site.
+Cat_3pl <- SOT_Master %>% filter(Category == '3P & Lic') %>% droplevels()
+write_csv(Cat_3pl, paste("3PL_Category_Week_",EOW,  "_YTD.csv", sep = ""))
+
+RCurl::ftpUpload(paste(getwd(), 
+                       paste("3PL_Category_Week_", EOW,  "_YTD.csv", sep = ""), sep = .Platform$file.sep),
+                 paste("ftp://ftp.gap.com/data/to_hq/SupplyChainReporting/3PL_Category", 
+                       paste("3PL_Category_Week_",EOW,  "_YTD.csv", sep = ""), sep = .Platform$file.sep))
+
+# Source rest of code
 source(paste("Transportation_Impact", "LPvsOC.R", sep = .Platform$file.sep))
 source("Parent_Vendor_outputs.R")
 source("Unmeasured.R")
 source("OTS_Impact.R")
+
 # }
 # #### Save SOT and OTS Master objects to Monthly dir for reporting ----
 # Monthly_directory <- choose_file_directory()
@@ -360,4 +421,4 @@ source("OTS_Impact.R")
 # 
 # save(SOT_Master, file = paste(Monthly_directory, "Monthly_objects",  'SOT_Master_object.rtf', sep = .Platform$file.sep))
 # save(OTS_Master, file = paste(Monthly_directory, "Monthly_objects",  'OTS_Master_object.rtf', sep = .Platform$file.sep ))
-
+# 
