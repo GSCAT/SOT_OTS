@@ -34,9 +34,9 @@ Transportation_data_combine$`INDC` <- factor(Transportation_data_combine$`INDC`,
 Transportation_data_combine <- Transportation_data_combine %>% arrange(`INDC`)
 
 OTP_Logistics_sub <- Transportation_data_combine %>% 
-  select(`Purchase Order Number`, "Logistics_Impact"= `INDC`) %>% 
+  select(`Purchase Order Number`, "Logistics_Impact"= `INDC`, "SCI_Planned_Stock_Date" = `Planned Stocked Date`) %>% 
   # filter(grepl("Vendor", Logistics_Impact, ignore.case = TRUE)) %>%
-  group_by(`Purchase Order Number`) %>%
+  group_by(`Purchase Order Number`, SCI_Planned_Stock_Date) %>%
   summarise("Logistics_Impact" = first(`Logistics_Impact`)) %>%
   droplevels()
 
@@ -53,6 +53,11 @@ OTP_Logistics_sub <- Transportation_data_combine %>%
 OTS_Master_Logistics_Impact <- OTS_Master %>% 
   left_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Purchase Order Number")) %>% 
   left_join(logistics_reason, by = c("Logistics_Impact" = "Logistics_Impact"))
+
+OTS_Master_Logistics_Impact_right_join <- OTS_Master %>% 
+  right_join(OTP_Logistics_sub, by = c("DEST_PO_ID" = "Purchase Order Number")) %>% 
+  left_join(logistics_reason, by = c("Logistics_Impact" = "Logistics_Impact"))
+
 
 OTS_Master_Logistics_Impact %>% 
   filter(Week == EOW) %>% 
@@ -227,7 +232,7 @@ OTS_by_GapInc <- OTS_Master_Logistics_Impact %>%
 write_csv(OTS_by_GapInc, paste(SOT_OTS_directory, "Impact_files", "OTS_Impact", "OTS_by_GapInc.csv", sep = .Platform$file.sep))
 ###### DC's
 
-DC_vec <- c("BDC", "CFC", "CAO", "GUK", "EFC", "WFC", 
+DC_vec <- c("BDC", "CFC", "CAO", "GUK", "EFC", "WFC", "WEO", 
             "OFC", "CEO", "TDC", "SDC", "FDC", "PDC", 
             "ODC", "EAO", "SHD", "UK DC", "JPD")
 

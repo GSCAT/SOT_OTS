@@ -203,7 +203,7 @@ Trans_output_Category <- SOT_Master_FOB %>%
   select(Category, `Late_Units`,`Total_Units`,`SOT %`, `SOT Variance from Target`, `Transport_Impact`, `Air_Vendor_Impact`, `Vendor_non_Air_Impact`, `Unmeasured_Impact`,  `Total_Impact`)
 
 Trans_output_GapInc <- SOT_Master_FOB %>%
-  filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE)) %>% 
+  filter(ShipCancelWeek == EOW, !grepl("FRANCHISE", ReportingBrand, ignore.case = TRUE, fixed= FALSE), FISCAL_YEAR == fis_yr) %>% 
   # group_by(ReportingBrand) %>% 
   summarise(
             "Late_Units" = (sum(subset(Units,Lateness == "Late"), na.rm = TRUE)),

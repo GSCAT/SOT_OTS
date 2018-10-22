@@ -13,13 +13,13 @@ library(RJDBC)
 # sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
 # sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
 # drv <- JDBC("com.teradata.jdbc.TeraDriver", 
-            "/mnt/Ke2l8b1/Resources/drivers/teradata/terajdbc4.jar:/mnt/Ke2l8b1/Resources/drivers/teradata/tdgssconfig.jar")
+#            "/mnt/Ke2l8b1/Resources/drivers/teradata/terajdbc4.jar:/mnt/Ke2l8b1/Resources/drivers/teradata/tdgssconfig.jar")
 
  drv=JDBC("com.teradata.jdbc.TeraDriver","C:\\TeraJDBC__indep_indep.16.10.00.05\\terajdbc4.jar;C:\\TeraJDBC__indep_indep.16.10.00.05\\tdgssconfig.jar")
  my_connect=dbConnect(drv,"jdbc:teradata://10.101.83.123/LOGMECH=LDAP",credentials$my_uid, credentials$my_pwd)
- # my_connect = dbConnect(drv,
-                      paste("jdbc:teradata://TDPRODCOP1.GID.GAP.COM/LOGMECH=LDAP,charset=UTF8,USER=",Sys.getenv("USERNAME"),",", "PASSWORD=",PASSWORD=Sys.getenv("PASSWORD"), sep = "")
- )
+ #my_connect = dbConnect(drv,
+  #                    paste("jdbc:teradata://TDPRODCOP1.GID.GAP.COM/LOGMECH=LDAP,charset=UTF8,USER=",Sys.getenv("USERNAME"),",", "PASSWORD=",PASSWORD=Sys.getenv("PASSWORD"), sep = "")
+ # )
  dbGetQuery(my_connect, statement = "SELECT  * from dbc.dbcinfo;")
  
  # my_query <- readLines('test_sql3.sql')
