@@ -44,57 +44,57 @@ if(!"credentials" %in% ls()){
 # save.image(paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep=.Platform$file.sep))
 # load(file = paste(SOT_OTS_directory, paste("Week_", EOW, ".RData", sep = ""), sep = .Platform$file.sep))
 
-# Create RODBC connection ----
-my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
-sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
-sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
-
-total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
-total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
-date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
-max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
-
-total_rows_SOT
-total_rows_OTS
-date_check
-max_stock_date
-
-
-
-if(date_check[[1]] == Sys.Date()) {
-  test_exists = 1
-  paste("Latest refresh is ", date_check[[1]], "Proceding to query")
-  # Create Master Objects ----
-  system.time(SOT_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
-
-  system.time(OTS_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
-} else if (readline("Data is old. Would you like to continue? Y or N: ") == 'Y') {
-  test_exists = 1
-  paste("Latest refresh is", Sys.Date() - date_check[[1]], "days old. Continuing anyway")
-  # Create Master Objects ----
-  system.time(SOT_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
-
-  system.time(OTS_Master <- sqlQuery(my_connect,
-                                     query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
-  
-} else {
-  test_exists = 0
-  paste("Aborting")
-}
+# # Create RODBC connection ----
+# my_connect <- odbcConnect(dsn= "IP EDWP", uid= credentials$my_uid, pwd= credentials$my_pwd)
+# sqlTables(my_connect, catalog = "EDWP", tableName  = "tables")
+# sqlQuery(my_connect, query = "SELECT  * from dbc.dbcinfo;")
+# 
+# total_rows_SOT <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_SOT_MASTER; ")
+# total_rows_OTS <- sqlQuery(my_connect, query = "select count(*) from SRAA_SAND.VIEW_OTS_MASTER; ")
+# date_check <- sqlQuery(my_connect, query = "select Data_Pulled from SRAA_SAND.VIEW_SOT_MASTER sample 1;")
+# max_stock_date <-  sqlQuery(my_connect, query = "select max(ACTUAL_STOCKED_LCL_DATE) as max_stocked_date from SRAA_SAND.EDW_IUF_YTD;")
+# 
+# total_rows_SOT
+# total_rows_OTS
+# date_check
+# max_stock_date
+# 
+# 
+# 
+# if(date_check[[1]] == Sys.Date()) {
+#   test_exists = 1
+#   paste("Latest refresh is ", date_check[[1]], "Proceding to query")
+#   # Create Master Objects ----
+#   system.time(SOT_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+# 
+#   system.time(OTS_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+# } else if (readline("Data is old. Would you like to continue? Y or N: ") == 'Y') {
+#   test_exists = 1
+#   paste("Latest refresh is", Sys.Date() - date_check[[1]], "days old. Continuing anyway")
+#   # Create Master Objects ----
+#   system.time(SOT_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_SOT_MASTER;"))
+# 
+#   system.time(OTS_Master <- sqlQuery(my_connect,
+#                                      query = "SELECT  * from SRAA_SAND.VIEW_OTS_MASTER;"))
+#   
+# } else {
+#   test_exists = 0
+#   paste("Aborting")
+# }
 
 ## Run below load statements if restoring from a previously saved object stored in the working directory. 
 ## Skip to "Create Master Objects" if pulling fresh data ----
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
-
-if ( test_exists == 1){
-  paste("Data has been pulled")
-}
-# Close connection ----
-close(my_connect)
+# 
+# if ( test_exists == 1){
+#   paste("Data has been pulled")
+# }
+# # Close connection ----
+# close(my_connect)
 
 # Use JDBC Connection----
 
