@@ -89,12 +89,12 @@ if(date_check[[1]] == Sys.Date()) {
 ## Skip to "Create Master Objects" if pulling fresh data ----
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects','SOT_Master_object.rtf', sep = .Platform$file.sep))
 # load(file = paste(SOT_OTS_directory, 'RAW_Objects', 'OTS_Master_object.rtf', sep = .Platform$file.sep ))
-
-if ( test_exists == 1){
-  paste("Data has been pulled")
-}
-# Close connection ----
-close(my_connect)
+# 
+# if ( test_exists == 1){
+#   paste("Data has been pulled")
+# }
+# # Close connection ----
+# close(my_connect)
 
 # Use JDBC Connection----
 
